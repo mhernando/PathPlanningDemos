@@ -17,3 +17,8 @@ The planners work in a 2D euclidean space
 ```
 pip3 install pygame
 ```
+### RUNNING THE DEMOS
+
+```
+python3 RRTdemos.py
+```

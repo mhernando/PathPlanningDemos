@@ -1,7 +1,5 @@
 import pygame
-from pygame.event import clear
 from RRTbase import *
-from time import sleep
 from maps  import *
 
 ''' change the following values to see how the algorithm works'''
@@ -110,12 +108,13 @@ def rrt_star(map, init, goal):
 menu = '''
 PLANNER DEMOS - Miguel Hernando
 Press any key to start:
+0 - Display Menu
 1 - RRT simple [default]
 2 - RRT-Connect 
 3 - RRT*
 4 - Use Continuous Trees
 5 - Use Discretized Trees (1,2)
-6 - Random map
+6 - Load a Random map
 7 - Load Map 1
 8 - Load Map 2
 '''        

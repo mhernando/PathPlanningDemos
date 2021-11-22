@@ -26,6 +26,10 @@ edge_thickness = 2
 edge_color = blue
 node_color = blue
 
+#dubbins
+dubbins_advance_step = 3 #pixels
+dubbins_rotation_step = 8 #degs
+dubbins_end_distance  = (360/dubbins_rotation_step)*dubbins_advance_step/7
 
 
 def p2distance(p1,p2):
@@ -97,6 +101,7 @@ class BaseMap:
         if goal: pygame.draw.circle(self.canvas, green, goal, 3*node_rad, 3*node_rad)
 
     def checkPoint(self, point):
+        if point[0]<0 or point[0]>self._width or point[1]<0 or point[1]>self._heigh: return False
         for ob in self._obs:
             if ob.collidepoint(point):
                 return False
@@ -117,7 +122,8 @@ class BaseMap:
                 return pp
         return p2
 
-    def random_sample(self):
+    def random_sample(self, theta = False):
+        if theta: return int(random.uniform(0,self._width)), int(random.uniform(0,self._heigh)), int(random.uniform(0,360))
         return int(random.uniform(0,self._width)), int(random.uniform(0,self._heigh))
 
 class TreeBase:
@@ -128,8 +134,8 @@ class TreeBase:
         self.tree = {} #dict where each node stores his parent
 
     def draw(self, canvas):
-        pygame.draw.circle(canvas, red, self.root, 3*node_rad, 3*node_rad)
-        if self.goal: pygame.draw.circle(canvas, green, self.goal, 3*node_rad, 3*node_rad)
+        pygame.draw.circle(canvas, red, self.root[:2], 3*node_rad, 3*node_rad)
+        if self.goal: pygame.draw.circle(canvas, green, self.goal[:2], 3*node_rad, 3*node_rad)
         for p2 in self.tree:
             self.draw_edge(canvas,p2)
         if self.goal in self.tree:
@@ -137,13 +143,13 @@ class TreeBase:
 
     def draw_edge(self, canvas, p2):
         if not p2 in self.tree: return
-        pygame.draw.line(canvas, self.color, self.tree[p2] ,p2, edge_thickness)
-        pygame.draw.circle(canvas, node_color , p2, node_rad, node_rad)
-        pygame.draw.circle(canvas, node_color, self.tree[p2], node_rad, node_rad)
+        pygame.draw.line(canvas, self.color, self.tree[p2][:2] ,p2[:2], edge_thickness)
+        pygame.draw.circle(canvas, node_color , p2[:2], node_rad, node_rad)
+        pygame.draw.circle(canvas, node_color, self.tree[p2][:2], node_rad, node_rad)
 
     def draw_path(self, canvas, p2):
         while(p2 in self.tree):
-            pygame.draw.line(canvas, red, self.tree[p2] ,p2, 2*edge_thickness)
+            pygame.draw.line(canvas, red, self.tree[p2][:2] ,p2[:2], 2*edge_thickness)
             p2 = self.tree[p2]
         pygame.display.update()
 
@@ -206,6 +212,45 @@ class TreeDiscretized(TreeBase):
             if d < min_dist:
                 min_dist, qn = d, p2
         return qn, None
+def dubbins_action(p,action):
+    angle = math.radians(p[2]+action[1]*dubbins_rotation_step)
+    return p[0]+dubbins_advance_step*math.cos(angle), p[1]+dubbins_advance_step*math.sin(angle), (360+math.degrees(angle))%360
+
+class TreeDubbins(TreeDiscretized):
+    def __init__(self, root, goal = None , color = edge_color):
+        super().__init__(root,goal, color)
+        self.node_theta = {root:0} #dict where each node stores its orientation
+        self.node_tray = {} #dict that stores the edge trayectory
+    def steer(self,q1,q2,map): 
+        '''advances with one action until the distance increases or collides
+        returns : 1) the last valid q if collision, or the last point,
+                  2) a secquence of points that describe the tray'''
+        actions=((1,-1),(1,0),(1,1)) #advance and rotation
+        dist = [p2distance(dubbins_action(q1,action),q2) for action in actions]
+        action = actions[dist.index(min(dist))] #select the actions whose first step minimizes the distance
+        qs = q1; tray = []; q = dubbins_action(q1,action); min_dist = p2distance(q1,q2)
+        dist = p2distance(q,q2)
+        while dist<min_dist:       
+            if not map.checkPoint(q[:2]): break 
+            qs, min_dist = q, dist
+            tray.append(qs)
+            q = dubbins_action(qs,action)
+            dist = p2distance(q,q2)
+        return qs, tray
+
+        
+
+    def add_edge(self, q1, q2, tray, canvas = None):
+        pp=q1
+        for p in tray: self.tree[p], pp = pp, p
+        if canvas:
+            pp=q1
+            for p in tray:
+                pygame.draw.line(canvas, self.color, pp[:2] ,p[:2], edge_thickness)
+                pp=p
+            pygame.draw.circle(canvas, node_color , q1[:2], node_rad, node_rad)
+            pygame.draw.circle(canvas, node_color, q2[:2], node_rad, node_rad)
+
 
 class TreeStar(TreeBase):
     def __init__(self, root, goal = None , color = edge_color):

@@ -7,7 +7,8 @@ map_size = (1000, 600)
 num_objects = 200
 init = (50,100)
 goal = (850,500)
-
+dubbins_init = (*init, 0)
+dubbins_goal = (*goal, 0)
 Tree = TreeBase
 
 def rrt_simple(map, init, goal):
@@ -56,6 +57,26 @@ def rrt_connect(map, init, goal):
         #console iteration info
         if len(tree_a.tree) > len(tree_b.tree) : 
             tree_a, tree_b = tree_b, tree_a
+        iterations +=1
+        print("Iteration: ", iterations)
+
+def rrt_dubbins(map, init, goal):
+    '''RRT Kino for dubbins SIMPLE WITH GOAL'''
+    tree = TreeDubbins(dubbins_init, dubbins_goal)
+    tree.draw(map.canvas)
+    iterations = 1
+    while(pygame_events()):
+        alpha = map.random_sample()
+        if not iterations%100: alpha = goal 
+        qn, edge = tree.nearest_to_swath(alpha)
+        qs, tray = tree.steer(qn, alpha, map)
+        if qs != qn:
+            tree.add_edge(qn, qs, tray, map.canvas)
+        if p2distance(qs, dubbins_goal)<dubbins_end_distance:
+            tree.draw_path(map.canvas,qs)
+            print("SUCCESS at iteration: ", iterations)
+            return True
+        #console iteration info
         iterations +=1
         print("Iteration: ", iterations)
 
@@ -112,11 +133,12 @@ Press any key to start:
 1 - RRT simple [default]
 2 - RRT-Connect 
 3 - RRT*
-4 - Use Continuous Trees
-5 - Use Discretized Trees (1,2)
-6 - Load a Random map
-7 - Load Map 1
-8 - Load Map 2
+4 - Dubbins RRT
+5 - Use Continuous Trees
+6 - Use Discretized Trees (1,2)
+7 - Load a Random map
+8 - Load Map 1
+9 - Load Map 2
 '''        
 if __name__ == '__main__':
     pygame.init()
@@ -136,21 +158,22 @@ if __name__ == '__main__':
         if key == pygame.K_1: planner = rrt_simple
         if key == pygame.K_2: planner = rrt_connect
         if key == pygame.K_3: planner = rrt_star
-        if key == pygame.K_4: Tree = TreeBase
-        if key == pygame.K_5: Tree = TreeDiscretized
-        if key == pygame.K_6: 
+        if key == pygame.K_4: planner = rrt_dubbins
+        if key == pygame.K_5: Tree = TreeBase
+        if key == pygame.K_6: Tree = TreeDiscretized
+        if key == pygame.K_7: 
             map.createRandomMap(num_objects, [init,goal])
             map.draw()
             map.draw_init_and_goal(init,goal)
             pygame.display.update()
             continue
-        if key == pygame.K_7: 
+        if key == pygame.K_8: 
             map.loadMap(map1, [init,goal])
             map.draw()
             map.draw_init_and_goal(init,goal)
             pygame.display.update()
             continue
-        if key == pygame.K_8: 
+        if key == pygame.K_9: 
             map.loadMap(map2, [init,goal])
             map.draw()
             map.draw_init_and_goal(init,goal)

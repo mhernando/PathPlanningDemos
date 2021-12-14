@@ -139,6 +139,7 @@ Press any key to start:
 7 - Load a Random map
 8 - Load Map 1
 9 - Load Map 2
+A - Load Map without solution
 '''        
 if __name__ == '__main__':
     pygame.init()
@@ -147,7 +148,7 @@ if __name__ == '__main__':
     planner = rrt_simple
     map.draw()
     map.draw_init_and_goal(init,goal)
-    pygame_print_text(map.canvas, (100,100), menu, 20)
+    pygame_print_text(map.canvas, (100,80), menu, 20)
     pygame.display.update()
     
     
@@ -175,6 +176,12 @@ if __name__ == '__main__':
             continue
         if key == pygame.K_9: 
             map.loadMap(map2, [init,goal])
+            map.draw()
+            map.draw_init_and_goal(init,goal)
+            pygame.display.update()
+            continue
+        if key == pygame.K_a: 
+            map.loadMap(map3, [init,goal])
             map.draw()
             map.draw_init_and_goal(init,goal)
             pygame.display.update()

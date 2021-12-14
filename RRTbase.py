@@ -237,7 +237,21 @@ class TreeDubbins(TreeDiscretized):
             q = dubbins_action(qs,action)
             dist = p2distance(q,q2)
         return qs, tray
-
+    def dubbins_distance(self, p1, p2):
+        v=[p2[0]-p1[0],p2[1]-p1[1]]
+        if v[0]**2+v[1]**2 < 0.01: return 0
+        m= module(v)
+        v[0],v[1] = v[0]/m, v[1]/m
+        angle = math.radians(p1[2]) - math.atan2(v[1],v[0])
+        return m*(2-math.cos(angle))
+    def nearest_to_swath(self, p):
+        qn =  self.root
+        min_dist = self.dubbins_distance(qn,p)
+        for p2 in self.tree:
+            d = self.dubbins_distance(p2,p)
+            if d < min_dist:
+                min_dist, qn = d, p2
+        return qn, None
         
 
     def add_edge(self, q1, q2, tray, canvas = None):

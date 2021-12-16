@@ -1,6 +1,6 @@
 import pygame
 from RRTbase import *
-from maps  import *
+from Maps  import *
 
 ''' change the following values to see how the algorithm works'''
 map_size = (1000, 600)
@@ -187,7 +187,7 @@ if __name__ == '__main__':
             pygame.display.update()
             continue
         if key == pygame.K_0: 
-            pygame_print_text(map.canvas, (100,100), menu, 20)
+            pygame_print_text(map.canvas, (100,80), menu, 20)
             continue
         if not planner(map, init, goal): break
     pygame.quit()

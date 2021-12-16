@@ -41,7 +41,7 @@ class Astar:
 
     def get_childs(self,n_state, graph):
         v=graph.get_childs(n_state.state)
-        if n_state.parent in v: v.remove(n_state.parent)
+        if n_state.parent and n_state.parent.state in v: v.remove(n_state.parent.state)
         childs = [Node(n,n_state.g+self.f_edge_cost(n_state.state,n),self.f_heur(n,self.goal),n_state) for n in v ]
         return childs
 
@@ -49,11 +49,13 @@ class Astar:
     def obtainPathTo(n_state):
         secuence=[]
         while n_state:
-            act.append(n_state.state)
+            secuence.append(n_state.state)
             n_state=n_state.parent
-        return secuence[-2::-1]
+        return secuence[::-1]
 
     def solve(self, init, goal, graph):
+        self.init=init
+        self.goal=goal
         self.closed=[]
         f_h=self.f_heur
         self.open=[Node(init,0,f_h(init,goal),None)]
@@ -89,7 +91,12 @@ class PRMBase:
             for p in edges:
                 pygame.draw.line(canvas, yellow, v ,p, edge_thickness)
         for v in self.vertices: pygame.draw.circle(canvas, node_color , v, node_rad, node_rad)   
-
+    def draw_path(self,path, canvas):
+        pi = path[0]
+        for pf in path[1:]:
+            pygame.draw.line(canvas, red, pi ,pf, 2*edge_thickness)
+            pi=pf
+        
     def addVertex(self, qn, map):
         if qn in self.vertices: return False      
         if not map.checkPoint(qn): return False
@@ -134,12 +141,12 @@ if __name__ == '__main__':
     pygame.init()
     prm = PRMBase()
     map = BaseMap(1000, 600) 
-    map.createRandomMap(50, [init,goal])
+    map.createRandomMap(150, [init,goal])
     prm.draw(map.canvas)
     map.draw()
     
-    while(pygame_events() and len(prm.vertices)<1000):
-        prm.populate(map,5)
+    while(pygame_events() and len(prm.vertices)<2000):
+        prm.populate(map,100)
         prm.draw(map.canvas)
     
     if not prm.addVertex(init,map): print("Inicio no conectable: SIN SOLUCION")
@@ -148,7 +155,7 @@ if __name__ == '__main__':
     map.draw_init_and_goal(init,goal)
     solver = Astar()
     sol=solver.solve(init,goal,prm)
-    if sol: print(sol)
+    if sol: prm.draw_path(sol,map.canvas)
     else: print("NO SE ENCONTRO")
     while(pygame_events()):
         pass 

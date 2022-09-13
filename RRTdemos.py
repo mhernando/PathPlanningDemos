@@ -2,6 +2,8 @@ import pygame
 from RRTbase import *
 from Maps  import *
 
+
+
 ''' change the following values to see how the algorithm works'''
 map_size = (1000, 600)
 num_objects = 200
@@ -10,6 +12,41 @@ goal = (850,500)
 dubbins_init = (*init, 0)
 dubbins_goal = (*goal, 0)
 Tree = TreeBase
+
+class SQ_Planner:
+    def __init__(self, map, init, goal):
+        self.map=map
+        self.init = init
+        self.goal = goal
+        self.iterations = 1
+    def iterate(self, max_iter):
+        pass
+#####################RRT SIMPLE######################################    
+class RRT(SQ_Planner):
+    def __init__(self, map, init, goal):
+        super().__init__(map, init, goal)
+        self.tree = Tree(init, goal)
+        self.tree.draw(map.canvas) 
+    def iterate(self, max_iter):
+        #alias
+        tree=self.tree
+        map= self.map
+        goal=self.goal
+        for i in range(max_iter):
+            self.iterations+=1
+            alpha = map.random_sample()
+            if not self.iterations%100: alpha = goal 
+            qn, edge = tree.nearest_to_swath(alpha)
+            qs = map.stopping_configuration(qn, alpha)
+            if qs != qn:
+                tree.add_edge(qn, qs, edge, map.canvas)
+            if qs == goal:
+                tree.draw_path(map.canvas,goal)
+                print("SUCCESS at iteration: ", self.iterations)
+                return True
+            #console iteration info
+            print("Iteration: ", self.iterations)
+        return False
 
 def rrt_simple(map, init, goal):
     '''RRT SIMPLE WITH GOAL'''
@@ -30,7 +67,41 @@ def rrt_simple(map, init, goal):
         #console iteration info
         iterations +=1
         print("Iteration: ", iterations)
-
+    return False
+#####################RRT CONNECT######################################
+class RRTconnect(SQ_Planner):
+    def __init__(self, map, init, goal):
+        super().__init__(map, init, goal)
+        self.tree_a = Tree(init)
+        self.tree_b = Tree(goal, color = (0,255,0))
+        self.tree_a.draw(map.canvas)
+        self.tree_b.draw(map.canvas)
+    def iterate(self, max_iter):
+        #alias
+        tree_a, tree_b=self.tree_a, self.tree_b
+        map= self.map
+        for i in range(max_iter):
+            self.iterations+=1
+            alpha = map.random_sample()
+            qn_a, edge_a = tree_a.nearest_to_swath(alpha)
+            qs_a = map.stopping_configuration(qn_a, alpha)
+            if qs_a != qn_a:
+                tree_a.add_edge(qn_a, qs_a, edge_a, map.canvas)
+                qn_b, edge_b = tree_b.nearest_to_swath(qs_a)
+                qs_b = map.stopping_configuration(qn_b, qs_a)
+                if qs_b != qn_b:
+                    tree_b.add_edge(qn_b, qs_b, edge_b, map.canvas)
+                if qs_b == qs_a:
+                    tree_a.draw_path(map.canvas,qs_a)
+                    tree_b.draw_path(map.canvas,qs_b)
+                    print("SUCCESS at iteration: ", self.iterations)
+                    return True
+            #tree swapping. be careful with aliases
+            if len(tree_a.tree) > len(tree_b.tree) : 
+                self.tree_a, self.tree_b = self.tree_b, self.tree_a
+                tree_a, tree_b = self.tree_a, self.tree_b
+            print("Iteration: ", self.iterations)
+        return False   
 def rrt_connect(map, init, goal):
     '''RRT CONNECT: bidirectional search'''
 
@@ -59,7 +130,34 @@ def rrt_connect(map, init, goal):
             tree_a, tree_b = tree_b, tree_a
         iterations +=1
         print("Iteration: ", iterations)
-
+        
+#####################RRT dubbins car######################################       
+class RRTdubbins(SQ_Planner):
+    '''RRT Kino for dubbins SIMPLE WITH GOAL'''
+    def __init__(self, map, init, goal):
+        super().__init__(map, (*init,0), (*goal, 0))
+        self.tree = TreeDubbins(self.init, self.goal)
+        self.tree.draw(map.canvas)
+    def iterate(self, max_iter):
+        #alias
+        tree=self.tree
+        map= self.map
+        goal=self.goal
+        for i in range(max_iter):
+            self.iterations+=1
+            alpha = map.random_sample()
+            if not self.iterations%100: alpha = goal 
+            qn, edge = tree.nearest_to_swath(alpha)
+            qs, tray = tree.steer(qn, alpha, map)
+            if qs != qn:
+                tree.add_edge(qn, qs, tray, map.canvas)
+            if p2distance(qs, dubbins_goal)<dubbins_end_distance:
+                tree.draw_path(map.canvas,qs)
+                print("SUCCESS at iteration: ", self.iterations)
+                return True
+            print("Iteration: ", self.iterations)
+        return False
+    
 def rrt_dubbins(map, init, goal):
     '''RRT Kino for dubbins SIMPLE WITH GOAL'''
     tree = TreeDubbins(dubbins_init, dubbins_goal)
@@ -79,7 +177,8 @@ def rrt_dubbins(map, init, goal):
         #console iteration info
         iterations +=1
         print("Iteration: ", iterations)
-
+        
+#####################RRT STAR######################################
 def rrt_star(map, init, goal):
     '''RRT STAR WITH GOAL'''
     tree = TreeStar(init, goal)
@@ -140,9 +239,27 @@ Press any key to start:
 8 - Load Map 1
 9 - Load Map 2
 A - Load Map without solution
-'''        
+'''
+
+import tkinter as tk
+import os
+w, h = map_size
+
 if __name__ == '__main__':
+    
+    # Add a couple widgets. We're going to put pygame in `embed`.
+    root = tk.Tk()
+    embed = tk.Frame(root)
+    embed.pack()
+    text = tk.Button(root, text='Blah.')
+    text.pack()
+    root.update()
+
+
     pygame.init()
+    #screen = pygame.display.set_mode((w,h))
+    
+   
     map = BaseMap(*map_size) 
     map.loadMap(map1, [init,goal])
     planner = rrt_simple
@@ -150,9 +267,9 @@ if __name__ == '__main__':
     map.draw_init_and_goal(init,goal)
     pygame_print_text(map.canvas, (100,80), menu, 20)
     pygame.display.update()
+
     
-    
-    while(True): 
+    while(True):
         key = pygame_wait_for_key()
         if key != pygame.K_0: map.draw()
         if key == pygame.QUIT: break
@@ -167,6 +284,7 @@ if __name__ == '__main__':
             map.draw()
             map.draw_init_and_goal(init,goal)
             pygame.display.update()
+
             continue
         if key == pygame.K_8: 
             map.loadMap(map1, [init,goal])

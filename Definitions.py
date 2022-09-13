@@ -51,4 +51,5 @@ def pygame_print_text(canvas, pos, text, size):
         text_surface = font.render(line, True, (0, 0, 0))
         canvas.blit(text_surface,dest=(pos[0],pos[1]+h))
         h+=size*3//2
-    pygame.display.update()
+    #pygame.display.update()
+    pygame.display.flip()

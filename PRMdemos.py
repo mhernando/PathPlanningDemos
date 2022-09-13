@@ -47,7 +47,7 @@ if __name__ == '__main__':
             prm.draw(map.canvas)
             map.draw_init_and_goal(init,goal)
 
-        if key == pygame.K_7: 
+        if key == pygame.K_6: 
             map.createRandomMap(num_objects, [init,goal])
             map.draw()
             map.draw_init_and_goal(init,goal)

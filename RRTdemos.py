@@ -179,6 +179,57 @@ def rrt_dubbins(map, init, goal):
         print("Iteration: ", iterations)
         
 #####################RRT STAR######################################
+  
+class RRTstar(SQ_Planner):
+    '''RRT Kino for dubbins SIMPLE WITH GOAL'''
+    def __init__(self, map, init, goal):
+        super().__init__(map, init, goal)
+        self.tree = TreeStar(init, goal)
+        self.tree.draw(map.canvas)
+
+    def iterate(self, max_iter):
+        #alias
+        tree=self.tree
+        map= self.map
+        goal=self.goal
+        repaint = False
+        for i in range(max_iter):
+            self.iterations+=1
+            alpha = map.random_sample()
+            if not self.iterations%100: alpha = goal 
+            qn, edge = tree.nearest_to_swath(alpha)
+            qs = map.stopping_configuration(qn, alpha)
+            if qs != qn:
+                Q_near = tree.get_closests_nodes(qs,optimal_radius(len(tree.tree))) #<- (node, distance, cost, dist+cost)
+                dmin= p2distance(qs,qn)
+                if edge: cmin = dmin+tree.node_cost[tree.tree[edge]]+p2distance(tree.tree[edge],qn)
+                else: cmin= dmin+tree.node_cost[qn]
+                #first strategy
+                for qi in Q_near:
+                    if qi[3]<cmin and map.checkSegment(qi[0],qs):
+                        tree.add_edge(qi[0],qs,None,map.canvas)
+                        Q_near.remove(qi)
+                        break
+                else: tree.add_edge(qn, qs, edge, map.canvas)
+                #second strategy : rewiring
+                cmin = tree.node_cost[qs]
+                for qi in Q_near:
+                    if cmin+qi[1]<qi[2] and map.checkSegment(qi[0],qs):
+                        tree.change_parent(qi[0],qs)
+                        repaint = True
+            if qs == goal:
+                tree.draw_path(map.canvas,goal)
+                print("SUCCESS at iteration: ", iterations)
+                #return True
+            #repainting managing
+            if(repaint):
+                map.draw()
+                tree.draw(map.canvas)
+                repaint = False
+            #console iteration info
+            print("Iteration: ", self.iterations)
+        return False
+    
 def rrt_star(map, init, goal):
     '''RRT STAR WITH GOAL'''
     tree = TreeStar(init, goal)

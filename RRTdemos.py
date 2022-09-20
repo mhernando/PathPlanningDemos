@@ -12,7 +12,9 @@ goal = (850,500)
 dubbins_init = (*init, 0)
 dubbins_goal = (*goal, 0)
 Tree = TreeBase
-
+def set_tree_type(ttype):
+    global Tree
+    Tree = ttype
 class SQ_Planner:
     def __init__(self, map, init, goal):
         self.map=map
@@ -219,7 +221,7 @@ class RRTstar(SQ_Planner):
                         repaint = True
             if qs == goal:
                 tree.draw_path(map.canvas,goal)
-                print("SUCCESS at iteration: ", iterations)
+                print("SUCCESS at iteration: ", self.iterations)
                 #return True
             #repainting managing
             if(repaint):
@@ -298,17 +300,11 @@ w, h = map_size
 
 if __name__ == '__main__':
     
-    # Add a couple widgets. We're going to put pygame in `embed`.
-    root = tk.Tk()
-    embed = tk.Frame(root)
-    embed.pack()
-    text = tk.Button(root, text='Blah.')
-    text.pack()
-    root.update()
+ 
 
 
     pygame.init()
-    #screen = pygame.display.set_mode((w,h))
+    screen = pygame.display.set_mode((w,h))
     
    
     map = BaseMap(*map_size) 

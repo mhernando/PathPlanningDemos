@@ -151,10 +151,24 @@ def init_defaults():
      map= context['map'] = BaseMap(*map_size)
      context['map'].loadMap(map1, [init,goal])
      context['planner'] = RRT(map,init, goal)
+def process_pygame_events():
+    ev = pygame.event.get()
+    for event in ev:
+        if context['state']==State.STOP:
+            global init, goal
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1: #left
+                    init = pygame.mouse.get_pos()
+                if event.button == 3: #right
+                    goal = pygame.mouse.get_pos()
+                context['map'].draw()
+                context['map'].draw_init_and_goal(init, goal)
+                pygame.display.update()
 
 def control_loop():
     global context
     while(not context['end']):
+        process_pygame_events()
         state = context['state']
         if state == State.PLAY:
             pygame.display.update()

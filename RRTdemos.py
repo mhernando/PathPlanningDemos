@@ -294,7 +294,7 @@ Press any key to start:
 A - Load Map without solution
 '''
 
-import tkinter as tk
+
 import os
 w, h = map_size
 

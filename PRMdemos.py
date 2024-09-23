@@ -15,7 +15,7 @@ def reloadMap(map, init, goal):
     map.draw()
     map.draw_init_and_goal(init,goal)
     pygame.display.update()
-    pass
+    
 
 menu = '''
 PRM PLANNER DEMOS - Miguel Hernando

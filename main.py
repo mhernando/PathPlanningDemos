@@ -1,6 +1,7 @@
 from RRTdemos import *
 from enum import Enum
 from threading import *
+import tkinter as tk
 class State(Enum):
     PLAY = 1
     PAUSE = 2

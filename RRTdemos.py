@@ -183,7 +183,7 @@ def rrt_dubbins(map, init, goal):
 #####################RRT STAR######################################
   
 class RRTstar(SQ_Planner):
-    '''RRT Kino for dubbins SIMPLE WITH GOAL'''
+    '''RRT STAR'''
     def __init__(self, map, init, goal):
         super().__init__(map, init, goal)
         self.tree = TreeStar(init, goal)
@@ -229,7 +229,11 @@ class RRTstar(SQ_Planner):
                 tree.draw(map.canvas)
                 repaint = False
             #console iteration info
-            print("Iteration: ", self.iterations)
+            #print("Iteration: ", self.iterations)
+            if goal in tree.tree:
+                print("lenght {0} at iter{1}: ".format(tree.node_cost[goal], self.iterations))
+            else:
+                print("Iteration: ", self.iterations)
         return False
     
 def rrt_star(map, init, goal):
@@ -266,7 +270,8 @@ def rrt_star(map, init, goal):
                     repaint = True
         if qs == goal:
             tree.draw_path(map.canvas,goal)
-            print("SUCCESS at iteration: ", iterations)
+            print("SUCCESS with lenght {0} at iter{1}: ".format(
+                tree.node_cost[goal], self.iterations))
             #return True
         #repainting managing
         if(repaint):
@@ -275,9 +280,122 @@ def rrt_star(map, init, goal):
             repaint = False
         #console iteration info
         iterations +=1
-        print("Iteration: ", iterations)
+        
+        if goal in tree.tree:
+            print("lenght {0} at iter{1}: ".format(tree.node_cost[goal], iterations))
+        else:
+            print("Iteration: ", iterations) 
+            
 
+###############Informed RRT STAR######################################
+from math import cos, sin , atan2, degrees
+import random
+def draw_rotated_ellipse(surface, color, center, a, b, angle):
+    target_rect = pygame.Rect(center[0]-a, center[1]-b,2*a,2*b)
+    ellipse_surface = pygame.Surface(target_rect.size, pygame.SRCALPHA)
+    pygame.draw.ellipse(ellipse_surface, color, (0, 0, 2*a, 2*b),4)
+    rotated_surface = pygame.transform.rotate(ellipse_surface, -degrees(angle))
+    rect = rotated_surface.get_rect(center = target_rect.center)
+    surface.blit(rotated_surface, rect)
+def uniform_random_circle_point():
+    r=random.uniform(0,1)**0.5
+    th = random.uniform(0,2*math.pi)
+    return r*cos(th), r*sin(th)
+class informedRRTstar(SQ_Planner):
+    '''informed RRT STAR'''
+    def __init__(self, map, init, goal):
+        super().__init__(map, init, goal)
+        self.tree = TreeStar(init, goal)
+        self.tree.draw(map.canvas)
+        #elipsoid invariants computation
+        self.c_min = p2distance(goal,init)
+        self.q_center=(0.5*(goal[0]+init[0]),0.5*(goal[1]+init[1]))
+        #best cost
+        self.ang = ang = atan2(goal[1]- init[1],goal[0]-init[0])
+        self.Rot = ((cos(ang), -sin(ang)),(sin(ang), cos(ang)))
+        self.c_best=None
+        
+    def sample(self, c_max):
+        map= self.map
+        R = self.Rot
+        if c_max:
+            while True:
+                r1=0.5*c_max
+                r2=0.5*(c_max**2-self.c_min**2)**0.5
+                q_ball = uniform_random_circle_point()
+                q_rand = (self.q_center[0]+r1*q_ball[0]*R[0][0]+r2*q_ball[1]*R[0][1],
+                         self.q_center[1]+r1*q_ball[0]*R[1][0]+r2*q_ball[1]*R[1][1])
+                if (0 < q_rand[0] < map._width) and (0 < q_rand[1] < map._heigh):
+                    return q_rand
+        return map.random_sample()
+        
+    def draw_ellipsoid(self, canvas):
+        if not self.c_best: return
+        r1=0.5*self.c_best
+        r2=0.5*(self.c_best**2-self.c_min**2)**0.5
+        draw_rotated_ellipse(canvas, (100, 255, 100), self.q_center,
+                             r1, r2, self.ang)
+        pygame.draw.circle(canvas, (100, 255, 100), self.q_center, 3*node_rad, 3*node_rad)
 
+       
+
+    def iterate(self, max_iter):
+        #alias
+        tree=self.tree
+        map= self.map
+        goal=self.goal
+        repaint = False
+        for i in range(max_iter):
+            self.iterations+=1
+            alpha = self.sample(self.c_best)
+            if not self.iterations%100: alpha = goal 
+            qn, edge = tree.nearest_to_swath(alpha)
+            qs = map.stopping_configuration(qn, alpha)
+            if qs != qn:
+                Q_near = tree.get_closests_nodes(qs,optimal_radius(len(tree.tree))) #<- (node, distance, cost, dist+cost)
+                dmin= p2distance(qs,qn)
+                if edge: cmin = dmin+tree.node_cost[tree.tree[edge]]+p2distance(tree.tree[edge],qn)
+                else: cmin= dmin+tree.node_cost[qn]
+                #first strategy
+                for qi in Q_near:
+                    if qi[3]<cmin and map.checkSegment(qi[0],qs):
+                        self.draw_ellipsoid(map.canvas)
+                        tree.add_edge(qi[0],qs,None,map.canvas)
+                        Q_near.remove(qi)
+                        break
+                else:
+                    self.draw_ellipsoid(map.canvas)
+                    tree.add_edge(qn, qs, edge, map.canvas)
+                    
+                
+                #second strategy : rewiring
+                cmin = tree.node_cost[qs]
+                for qi in Q_near:
+                    if cmin+qi[1]<qi[2] and map.checkSegment(qi[0],qs):
+                        tree.change_parent(qi[0],qs)
+                        repaint = True
+            if qs == goal:
+                self.draw_ellipsoid(map.canvas)
+                tree.draw_path(map.canvas,goal)
+                self.c_best = tree.node_cost[goal]
+                print("SUCCESS with lenght {0} at iter{1}: ".format(self.c_best, self.iterations))
+                #return True
+            #repainting managing
+            if(repaint):
+                map.draw()
+                self.draw_ellipsoid(map.canvas) 
+                tree.draw(map.canvas)
+                repaint = False
+              
+            #console iteration info
+            if self.c_best:
+                print("Iteration: {0} Length:{1:.9}/{2:.9}".format(self.iterations,
+                                    self.c_best, self.c_min))
+            else:
+                print("Iteration: ", self.iterations)
+        
+        return False
+    
 menu = '''
 PLANNER DEMOS - Miguel Hernando
 Press any key to start:

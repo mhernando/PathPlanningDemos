@@ -18,7 +18,8 @@ context = {
 planners = [("(1) Simple RRT", 0, RRT),
             ("(2) RRT-Connect", 1, RRTconnect),
             ("(3) RRT-Star", 2, RRTstar),
-            ("(4) RRT (Dubbin's car)", 3, RRTdubbins)]  
+            ("(4) Informed-RRT-Star",3,informedRRTstar),
+            ("(5) RRT (Dubbin's car)", 4, RRTdubbins)]  
 def key_press(key):
     c=key.char
     print("Key pressed:", c)

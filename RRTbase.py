@@ -32,7 +32,7 @@ class TreeBase:
 
     def draw_path(self, canvas, p2):
         while(p2 in self.tree):
-            pygame.draw.line(canvas, red, self.tree[p2][:2] ,p2[:2], 2*edge_thickness)
+            pygame.draw.line(canvas, red, self.tree[p2][:2] ,p2[:2], path_thickness)
             p2 = self.tree[p2]
         pygame.display.update()
     

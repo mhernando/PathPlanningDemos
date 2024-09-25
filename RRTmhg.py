@@ -21,6 +21,8 @@ class n_informedRRTstar(SQ_Planner):
         el = ellip(init,goal)
         self.ellipses={init:{goal:el}}
         self.c_min=el.c_min
+        self.vol = map._width*map._heigh
+        self.n_nodes=1 #number of normalized tree nodes
     def get_ellip(self, q1, q2):
         if q1 in self.ellipses :
             if q2 in self.ellipses[q1]:
@@ -30,6 +32,8 @@ class n_informedRRTstar(SQ_Planner):
         return el
     #it will work only if there is a path to goal
     def pick_subpath(self):
+        #de momento la mitad de las veces toma el total
+        if random.choice([True, False]):return self.init, self.goal
         path =  self.tree.get_path(self.goal)
         while(True):
             i1, i2 = sorted(random.sample(range(len(path)), 2))
@@ -39,21 +43,21 @@ class n_informedRRTstar(SQ_Planner):
         #alias
         map= self.map
         costs =  self.tree.node_cost
-        if not self.c_best: return map.random_sample()
+        if not self.c_best: return map.random_sample(),1
         #there is a solution so pick a sub_path 
         q1 , q2 = self.pick_subpath()
         el = self.get_ellip(q1 , q2)
         c_max = costs[q2] - costs[q1]
         R = el.Rot
         r1=0.5*c_max
-        if c_max < el.c_min : return map.random_sample()
+        if c_max < el.c_min : return map.random_sample(), 1
         r2=0.5*(c_max**2-el.c_min**2)**0.5
         while True:
             q_ball = uniform_random_circle_point()
             q_rand = (el.q_center[0]+r1*q_ball[0]*R[0][0]+r2*q_ball[1]*R[0][1],
                      el.q_center[1]+r1*q_ball[0]*R[1][0]+r2*q_ball[1]*R[1][1])
             if (0 < q_rand[0] < map._width) and (0 < q_rand[1] < map._heigh):
-                    return q_rand
+                    return q_rand, r1*r2/self.vol
         
         
     def draw_ellipsoid(self, canvas):
@@ -74,12 +78,13 @@ class n_informedRRTstar(SQ_Planner):
         repaint = False
         for i in range(max_iter):
             self.iterations+=1
-            alpha = self.sample()
+            alpha, vol = self.sample()
             if not self.iterations%100: alpha = goal 
             qn, edge = tree.nearest_to_swath(alpha)
             qs = map.stopping_configuration(qn, alpha)
             if qs != qn:
-                Q_near = tree.get_closests_nodes(qs,optimal_radius(len(tree.tree))) #<- (node, distance, cost, dist+cost)
+                #number of nodes have to be normalized with the generation area
+                Q_near = tree.get_closests_nodes(qs,optimal_radius(self.n_nodes)) #<- (node, distance, cost, dist+cost)
                 dmin= p2distance(qs,qn)
                 if edge: cmin = dmin+tree.node_cost[tree.tree[edge]]+p2distance(tree.tree[edge],qn)
                 else: cmin= dmin+tree.node_cost[qn]
@@ -88,11 +93,13 @@ class n_informedRRTstar(SQ_Planner):
                     if qi[3]<cmin and map.checkSegment(qi[0],qs):
                         #self.draw_ellipsoid(map.canvas)
                         tree.add_edge(qi[0],qs,None,map.canvas)
+                        self.n_nodes+=vol
                         Q_near.remove(qi)
                         break
                 else:
                     #self.draw_ellipsoid(map.canvas)
                     tree.add_edge(qn, qs, edge, map.canvas)
+                    self.n_nodes+=vol #normalized number of nodes
                     
                 
                 #second strategy : rewiring
@@ -137,13 +144,14 @@ if __name__ == '__main__':
     
 
 
+
     pygame.init()
     screen = pygame.display.set_mode((w,h))
     
    
     mapa = BaseMap(*map_size)
     mapa.createRandomMap(num_objects, [init,goal])
-    mapa.loadMap(map4, [init,goal]) #map4,  map1
+    mapa.loadMap(map1, [init,goal]) #map4,  map1
     
     
     planner = informedRRTstar(mapa, init, goal)

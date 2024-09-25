@@ -1,4 +1,5 @@
 from RRTdemos import *
+from RRTmhg import *
 from enum import Enum
 from threading import *
 import tkinter as tk
@@ -19,7 +20,8 @@ planners = [("(1) Simple RRT", 0, RRT),
             ("(2) RRT-Connect", 1, RRTconnect),
             ("(3) RRT-Star", 2, RRTstar),
             ("(4) Informed-RRT-Star",3,informedRRTstar),
-            ("(5) RRT (Dubbin's car)", 4, RRTdubbins)]  
+            ("(5) N-informed-RRT-Star", 4, n_informedRRTstar),
+            ("(6) RRT (Dubbin's car)", 5, RRTdubbins)]  
 def key_press(key):
     c=key.char
     print("Key pressed:", c)
@@ -63,6 +65,8 @@ def set_map(nmap):
         map.loadMap(map2, [init,goal])
     if nmap==4: 
         map.loadMap(map3, [init,goal])
+    if nmap==5: 
+        map.loadMap(map4, [init,goal])
     map.draw()
     map.draw_init_and_goal(init,goal)
     pygame.display.update()    
@@ -141,6 +145,7 @@ def init_gui_window():
     tk.Button(frame_map, text="Load Random map", command=lambda: set_map(1)).pack(fill=tk.X)
     tk.Button(frame_map, text="Load Map 1", command=lambda: set_map(2)).pack(fill=tk.X)
     tk.Button(frame_map, text="Load Map 2", command=lambda: set_map(3)).pack(fill=tk.X)
+    tk.Button(frame_map, text="Load Map 3", command=lambda: set_map(5)).pack(fill=tk.X)
     tk.Button(frame_map, text="Load unsolvable map", command=lambda: set_map(4)).pack(fill=tk.X)
     frame_map.pack(padx=5, pady=5)
     ######################################################################

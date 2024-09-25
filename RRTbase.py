@@ -5,7 +5,7 @@ import math
 import pygame
 from Definitions import *
 from Maps import *
-
+from collections import deque
 
 
 
@@ -35,6 +35,14 @@ class TreeBase:
             pygame.draw.line(canvas, red, self.tree[p2][:2] ,p2[:2], 2*edge_thickness)
             p2 = self.tree[p2]
         pygame.display.update()
+    
+    def get_path(self, node):
+        path=deque()
+        while(node in self.tree):
+            path.appendleft(node)
+            node = self.tree[node]
+        path.appendleft(self.root)
+        return list(path)
 
     def add_edge(self, p1,p2,p3=None, canvas = None): 
         '''p2 has the parent p1. if p2 exists, nothing is done. if edge, 

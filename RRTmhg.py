@@ -142,6 +142,9 @@ if __name__ == '__main__':
     init = (50,100)
     goal = (850,500)
     
+    vert = horiz = 10
+    
+    
 
 
 

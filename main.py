@@ -55,18 +55,22 @@ def stop():
     context['state'] = State.STOP
     update_UI_states()
 
-def set_map(nmap):
+def set_map(i):
     map=context['map']
-    if nmap==1:
+    global init, goal
+    if i==-1:
         map.createRandomMap(num_objects, [init,goal])  
-    if nmap==2: 
-        map.loadMap(map1, [init,goal])
-    if nmap==3: 
+    else:
+        init = maps[i].init
+        goal = maps[i].goal
+        map.loadMap(maps[i].map,[init, goal])
+    '''if nmap==3: 
         map.loadMap(map2, [init,goal])
     if nmap==4: 
         map.loadMap(map3, [init,goal])
     if nmap==5: 
         map.loadMap(map4, [init,goal])
+    '''
     map.draw()
     map.draw_init_and_goal(init,goal)
     pygame.display.update()    
@@ -142,11 +146,12 @@ def init_gui_window():
     control_frame.pack(padx=5, pady=5)
     ##########################MAP FRAME##################################
     context["frame_map"]=frame_map = tk.Frame(root,borderwidth=2, relief=tk.GROOVE)
-    tk.Button(frame_map, text="Load Random map", command=lambda: set_map(1)).pack(fill=tk.X)
-    tk.Button(frame_map, text="Load Map 1", command=lambda: set_map(2)).pack(fill=tk.X)
-    tk.Button(frame_map, text="Load Map 2", command=lambda: set_map(3)).pack(fill=tk.X)
+    tk.Button(frame_map, text="Load Random map", command=lambda: set_map(-1)).pack(fill=tk.X)
+    for i in range(len(maps)):
+        tk.Button(frame_map, text=maps[i].description, command=lambda i=i: set_map(i)).pack(fill=tk.X)
+    '''tk.Button(frame_map, text="Load Map 2", command=lambda: set_map(3)).pack(fill=tk.X)
     tk.Button(frame_map, text="Load Map 3", command=lambda: set_map(5)).pack(fill=tk.X)
-    tk.Button(frame_map, text="Load unsolvable map", command=lambda: set_map(4)).pack(fill=tk.X)
+    tk.Button(frame_map, text="Load unsolvable map", command=lambda: set_map(4)).pack(fill=tk.X)'''
     frame_map.pack(padx=5, pady=5)
     ######################################################################
     update_UI_states()

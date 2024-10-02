@@ -5,7 +5,8 @@ import math
 import pygame
 from Definitions import *
 
-
+def_init = (50,100)
+def_goal = (850,500)
 map1=(
 (150,80,750,20),
 (500,70,20,430),
@@ -23,7 +24,24 @@ map3=(
 map4=((250,200,400,20),
     (300,200,20,300),
     (250,500,300,20))
-maps=(map1,map2, map3, map4)
+pared = 10
+map5=((500,0, pared, 80),
+        (200,100,600,pared),
+        (500,100,pared,300),
+        (200,400,600,pared))
+class MapData:
+    def __init__(self, map, description, init = def_init, goal = def_goal):
+        self.map = map
+        self.init = init
+        self.goal = goal
+        self.description = description
+        
+maps=(MapData(map1,"Mapa 'J' Map"),
+      MapData(map2,"Easy Map"),
+      MapData(map3,"Imposible Map"),
+      MapData(map4,"T Map"),
+      MapData(map5,"Mapa NIRT",(200,200),(800,200))
+      )
 
 def p2distance(p1,p2):
     return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**0.5

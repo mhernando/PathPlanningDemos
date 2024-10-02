@@ -33,7 +33,7 @@ class n_informedRRTstar(SQ_Planner):
     #it will work only if there is a path to goal
     def pick_subpath(self):
         #de momento la mitad de las veces toma el total
-        if random.choice([True, False]):return self.init, self.goal
+        #if random.random() < .7 :return self.init, self.goal
         path =  self.tree.get_path(self.goal)
         while(True):
             i1, i2 = sorted(random.sample(range(len(path)), 2))
@@ -41,23 +41,39 @@ class n_informedRRTstar(SQ_Planner):
         
     def sample(self):
         #alias
+        n_factor = 0.2
         map= self.map
         costs =  self.tree.node_cost
+        init = self.init
+        goal = self.goal
         if not self.c_best: return map.random_sample(),1
-        #there is a solution so pick a sub_path 
-        q1 , q2 = self.pick_subpath()
-        el = self.get_ellip(q1 , q2)
-        c_max = costs[q2] - costs[q1]
+        #there is a solution so pick a sub_path
+        el0 =  self.get_ellip(init, goal)
+        c_total = costs[goal] - costs[init]
+        
+        if random.random()<n_factor:
+            q1 , q2 = self.pick_subpath()
+            el = self.get_ellip(q1 , q2)
+            c_max = costs[q2] - costs[q1]
+        else:
+            el, c_max, q1, q2 = el0, c_total, init, goal
+        
+        if c_max-el.c_min <=0 :
+            print(f"degenero: c_max={c_max} c_min={el.c_min} {q1} - {q2} ")
+            el, c_max, q1, q2 = el0, c_total, init, goal
+            
+        
         R = el.Rot
         r1=0.5*c_max
-        if c_max < el.c_min : return map.random_sample(), 1
         r2=0.5*(c_max**2-el.c_min**2)**0.5
         while True:
             q_ball = uniform_random_circle_point()
             q_rand = (el.q_center[0]+r1*q_ball[0]*R[0][0]+r2*q_ball[1]*R[0][1],
                      el.q_center[1]+r1*q_ball[0]*R[1][0]+r2*q_ball[1]*R[1][1])
             if (0 < q_rand[0] < map._width) and (0 < q_rand[1] < map._heigh):
-                    return q_rand, r1*r2/self.vol
+                vol=r1*r2/self.vol
+                if vol>1: vol =1
+                return q_rand, vol
         
         
     def draw_ellipsoid(self, canvas):
@@ -79,11 +95,14 @@ class n_informedRRTstar(SQ_Planner):
         for i in range(max_iter):
             self.iterations+=1
             alpha, vol = self.sample()
+            if vol < 0 :
+                print("VOL <0", vol)
             if not self.iterations%100: alpha = goal 
             qn, edge = tree.nearest_to_swath(alpha)
             qs = map.stopping_configuration(qn, alpha)
             if qs != qn:
                 #number of nodes have to be normalized with the generation area
+                
                 Q_near = tree.get_closests_nodes(qs,optimal_radius(self.n_nodes)) #<- (node, distance, cost, dist+cost)
                 dmin= p2distance(qs,qn)
                 if edge: cmin = dmin+tree.node_cost[tree.tree[edge]]+p2distance(tree.tree[edge],qn)

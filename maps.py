@@ -131,6 +131,7 @@ class BaseMap:
         for p in points: 
             if not self.checkPoint(p):
                 return pp
+            pp=p
         return p2
 
     def random_sample(self, theta = False):

@@ -1,6 +1,6 @@
 import pygame
 from RRTbase import *
-from Maps  import *
+from maps  import *
 
 
 

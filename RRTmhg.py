@@ -41,7 +41,7 @@ class n_informedRRTstar(SQ_Planner):
         
     def sample(self):
         #alias
-        n_factor = 0.2
+        n_factor = 0.5
         map= self.map
         costs =  self.tree.node_cost
         init = self.init
@@ -86,7 +86,7 @@ class n_informedRRTstar(SQ_Planner):
 
        
 
-    def iterate(self, max_iter):
+    def iterate(self, max_iter, logger=None):
         #alias
         tree=self.tree
         map= self.map
@@ -141,11 +141,15 @@ class n_informedRRTstar(SQ_Planner):
                 repaint = False
               
             #console iteration info
+            #logger
+            if logger:
+                if self.c_best:logger.add_sample(self.iterations,self.c_best,self.c_best/self.c_min)
+                else:logger.add_sample(self.iterations,0,0)
+                
             if self.c_best:
                 print("Iteration2: {0} Length:{1:.9}/{2:.9}".format(self.iterations,self.c_best, self.c_min))
             else:
                 print("Iteration2: ", self.iterations)
-                pass
         
         return False
 

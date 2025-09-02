@@ -1,8 +1,12 @@
 from RRTdemos import *
 from RRTmhg import *
+from logger import DataLogger
 from enum import Enum
 from threading import *
 import tkinter as tk
+from tkinter import filedialog
+from tkinter import messagebox
+
 class State(Enum):
     PLAY = 1
     PAUSE = 2
@@ -14,7 +18,8 @@ context = {
     'planner': None,
     'map': None,
     'state': State.STOP,
-    'end': False
+    'end': False,
+    'logger': DataLogger()
     }
 planners = [("(1) Simple RRT", 0, RRT),
             ("(2) RRT-Connect", 1, RRTconnect),
@@ -38,21 +43,40 @@ def play():
         planner=planners[context['sel_planner'].get()][2]
         map = context['map']
         context['planner']=planner(map, init, goal)
+        context['logger'].reset()
 
         map.draw()
         map.draw_init_and_goal(init,goal)
     context['state'] = State.PLAY
+    context['logger'].resume()
     update_UI_states()
 def pause():
     global context
     context['state'] = State.PAUSE
+    context['logger'].pause()
     update_UI_states()
 def frame_state(frame, state):
     for child in frame.winfo_children():
        child.configure(state=state)
-def stop():
+def save():
     global context
+    if context['state'] not in (State.STOP, State.PAUSE):return
+    context['logger'].pause()
+    file_name = filedialog.asksaveasfilename(
+        defaultextension=".xlsx",
+        filetypes=[("Excel files", "*.xlsx")],
+        title="Save planning data as ..."
+    ) 
+    if file_name:
+        context['logger'].save(file_name)
+    else:
+        messagebox.showwarning("Cancelado", "No se seleccionó ningún archivo.")
+
+    
+def stop():
+    global context  
     context['state'] = State.STOP
+    context['logger'].pause()
     update_UI_states()
 
 def set_map(i):
@@ -144,14 +168,15 @@ def init_gui_window():
     context['stop']=bstop=tk.Button(control_frame, text="STOP", command=stop)
     bstop.pack(side=tk.RIGHT)
     control_frame.pack(padx=5, pady=5)
+    
+    context['save']=bsave=tk.Button(root, text="SAVE", command=save)
+    bsave.pack(padx=10,fill=tk.X)
     ##########################MAP FRAME##################################
     context["frame_map"]=frame_map = tk.Frame(root,borderwidth=2, relief=tk.GROOVE)
     tk.Button(frame_map, text="Load Random map", command=lambda: set_map(-1)).pack(fill=tk.X)
     for i in range(len(maps)):
         tk.Button(frame_map, text=maps[i].description, command=lambda i=i: set_map(i)).pack(fill=tk.X)
-    '''tk.Button(frame_map, text="Load Map 2", command=lambda: set_map(3)).pack(fill=tk.X)
-    tk.Button(frame_map, text="Load Map 3", command=lambda: set_map(5)).pack(fill=tk.X)
-    tk.Button(frame_map, text="Load unsolvable map", command=lambda: set_map(4)).pack(fill=tk.X)'''
+
     frame_map.pack(padx=5, pady=5)
     ######################################################################
     update_UI_states()
@@ -184,7 +209,9 @@ def control_loop():
         state = context['state']
         if state == State.PLAY:
             pygame.display.update()
-            if context['planner'].iterate(10): pause()
+            if context['planner'].iterate(10, context['logger']):
+                pause()
+                context['logger'].pause()
 if __name__ == '__main__':
  
     pygame.init()

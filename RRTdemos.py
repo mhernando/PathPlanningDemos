@@ -29,7 +29,7 @@ class RRT(SQ_Planner):
         super().__init__(map, init, goal)
         self.tree = Tree(init, goal)
         self.tree.draw(map.canvas) 
-    def iterate(self, max_iter):
+    def iterate(self, max_iter, logger=None):
         #alias
         tree=self.tree
         map= self.map
@@ -78,7 +78,7 @@ class RRTconnect(SQ_Planner):
         self.tree_b = Tree(goal, color = (0,255,0))
         self.tree_a.draw(map.canvas)
         self.tree_b.draw(map.canvas)
-    def iterate(self, max_iter):
+    def iterate(self, max_iter, logger=None):
         #alias
         tree_a, tree_b=self.tree_a, self.tree_b
         map= self.map
@@ -140,7 +140,7 @@ class RRTdubbins(SQ_Planner):
         super().__init__(map, (*init,0), (*goal, 0))
         self.tree = TreeDubbins(self.init, self.goal)
         self.tree.draw(map.canvas)
-    def iterate(self, max_iter):
+    def iterate(self, max_iter, logger=None):
         #alias
         tree=self.tree
         map= self.map
@@ -187,9 +187,10 @@ class RRTstar(SQ_Planner):
     def __init__(self, map, init, goal):
         super().__init__(map, init, goal)
         self.tree = TreeStar(init, goal)
+        self.c_min = p2distance(goal,init)
         self.tree.draw(map.canvas)
 
-    def iterate(self, max_iter):
+    def iterate(self, max_iter, logger=None):
         #alias
         tree=self.tree
         map= self.map
@@ -286,7 +287,10 @@ def rrt_star(map, init, goal):
         else:
             print("Iteration: ", iterations) 
             
-
+        if logger:
+            c_best = tree.node_cost[goal]
+            if goal in tree.tree:logger.add_sample(iterations,c_best,c_best/self.c_min)
+            else:logger.add_sample(self.iterations,0,0)
 ###############Informed RRT STAR######################################
 from math import cos, sin , atan2, degrees
 import random
@@ -339,7 +343,7 @@ class informedRRTstar(SQ_Planner):
 
        
 
-    def iterate(self, max_iter):
+    def iterate(self, max_iter, logger=None):
         #alias
         tree=self.tree
         map= self.map
@@ -386,7 +390,9 @@ class informedRRTstar(SQ_Planner):
                 self.draw_ellipsoid(map.canvas) 
                 tree.draw(map.canvas)
                 repaint = False
-              
+            if logger:
+                if self.c_best:logger.add_sample(self.iterations,self.c_best,self.c_best/self.c_min)
+                else:logger.add_sample(self.iterations,0,0)  
             #console iteration info
             if self.c_best:
                 print("Iteration: {0} Length:{1:.9}/{2:.9}".format(self.iterations,

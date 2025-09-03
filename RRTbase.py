@@ -4,7 +4,7 @@ drawables trees'''
 import math
 import pygame
 from Definitions import *
-from maps import *
+from Maps import *
 from collections import deque
 
 

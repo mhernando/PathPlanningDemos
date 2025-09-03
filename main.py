@@ -1,6 +1,7 @@
 from RRTdemos import *
 from RRTmhg import *
 from logger import DataLogger
+from experimentmanager import ExperimentManager
 from enum import Enum
 from threading import *
 import tkinter as tk
@@ -19,7 +20,12 @@ context = {
     'map': None,
     'state': State.STOP,
     'end': False,
-    'logger': DataLogger()
+    'logger': DataLogger(),
+    'experiments': ExperimentManager(),
+    'exp_state': State.STOP,
+    'exp_n':10,
+    'exp_max_iter':1000,
+    'exp_current':0
     }
 planners = [("(1) Simple RRT", 0, RRT),
             ("(2) RRT-Connect", 1, RRTconnect),
@@ -47,6 +53,9 @@ def play():
 
         map.draw()
         map.draw_init_and_goal(init,goal)
+    if context['exp_state'] == State.PAUSE:
+        context['experiments'].resume()
+        context['exp_state'] = State.PLAY
     context['state'] = State.PLAY
     context['logger'].resume()
     update_UI_states()
@@ -54,6 +63,9 @@ def pause():
     global context
     context['state'] = State.PAUSE
     context['logger'].pause()
+    if context['exp_state'] == State.PLAY:
+        context['experiments'].pause()
+        context['exp_state'] = State.PAUSE
     update_UI_states()
 def frame_state(frame, state):
     for child in frame.winfo_children():
@@ -71,13 +83,64 @@ def save():
         context['logger'].save(file_name)
     else:
         messagebox.showwarning("Cancelado", "No se seleccionó ningún archivo.")
+def experiments():
+    global context
+    if context['exp_state'] != State.STOP: return
+    dialog = tk.Toplevel(context['gui'])
+    dialog.title("Configuración del experimento")
 
+    tk.Label(dialog, text="Número máximo de muestras:").grid(row=0, column=0, padx=10, pady=5)
+    entry_muestras = tk.Entry(dialog)
+    entry_muestras.grid(row=0, column=1, padx=10, pady=5)
+
+    tk.Label(dialog, text="Número de experimentos:").grid(row=1, column=0, padx=10, pady=5)
+    entry_experimentos = tk.Entry(dialog)
+    entry_experimentos.grid(row=1, column=1, padx=10, pady=5)
+
+    entry_muestras.insert(0, str(context['exp_max_iter']))
+    entry_experimentos.insert(0, str(context['exp_n']))
+    def on_ok():
+        try:
+            num_muestras = int(entry_muestras.get())
+            num_experimentos = int(entry_experimentos.get())
+            dialog.destroy()
+            iniciar_experimento(num_muestras, num_experimentos)
+        except ValueError:
+            messagebox.showerror("Error", "Por favor, introduce valores numéricos válidos.")
+
+    def on_cancel():
+        dialog.destroy()
+
+    tk.Button(dialog, text="OK", command=on_ok).grid(row=2, column=0, padx=10, pady=10)
+    tk.Button(dialog, text="Cancel", command=on_cancel).grid(row=2, column=1, padx=10, pady=10)
+  
     
 def stop():
     global context  
     context['state'] = State.STOP
     context['logger'].pause()
+    #gestionar el stop de los experimentos
+    context['exp_state'] = State.STOP
     update_UI_states()
+
+def iniciar_experimento(num_muestras, num_experimentos):
+    global context
+    context['exp_n']=num_experimentos
+    context['exp_max_iter']=num_muestras
+    context['experiments'].reset()
+    context['exp_current']=0
+    context['experiments'].start_experiment(0)
+    context['exp_state'] = State.PLAY
+    
+    play()
+    
+def end_experiments():
+    context['exp_state'] = State.STOP
+    #context['experiments'].save_all('prueba.xlsx')
+    context['experiments'].plot_normalizado()
+    #context['experiments'].plot_all()
+    print("EXPERIMENT END")
+    stop()
 
 def set_map(i):
     map=context['map']
@@ -104,22 +167,25 @@ def set_map(i):
 def update_UI_states():
     global context
     state = context['state']
-    bplay, bpause, bstop = context['play'], context['pause'], context['stop']
+    bplay, bpause, bstop , bexp= context['play'], context['pause'], context['stop'],  context['b_experiments']
     frm_state = "disabled"
     if state == State.STOP :
         bpause["state"]="disabled"
         bplay["state"]="normal"
         bstop["state"]="disabled"
+        bexp["state"]="normal"
         frm_state="normal"
     if state == State.PAUSE :
         bpause["state"]="disabled"
         bplay["state"]="normal"
         bstop["state"]="normal"
+        bexp["state"]="disabled"
 
     if state == State.PLAY :
         bpause["state"]="normal"
         bplay["state"]="disabled"
         bstop["state"]="normal"
+        bexp["state"]="disabled"
 
     frame_state(context['frame_planners'],frm_state)
     frame_state(context['frame_trees'],frm_state)
@@ -171,6 +237,8 @@ def init_gui_window():
     
     context['save']=bsave=tk.Button(root, text="SAVE", command=save)
     bsave.pack(padx=10,fill=tk.X)
+    context['b_experiments']=bsave=tk.Button(root, text="EXPERIMENTS", command=experiments)
+    bsave.pack(padx=10,fill=tk.X)
     ##########################MAP FRAME##################################
     context["frame_map"]=frame_map = tk.Frame(root,borderwidth=2, relief=tk.GROOVE)
     tk.Button(frame_map, text="Load Random map", command=lambda: set_map(-1)).pack(fill=tk.X)
@@ -209,9 +277,38 @@ def control_loop():
         state = context['state']
         if state == State.PLAY:
             pygame.display.update()
-            if context['planner'].iterate(10, context['logger']):
-                pause()
-                context['logger'].pause()
+            iterate()
+
+#main function responsible of iterations.
+'''
+    'experiments': ExperimentManager(),
+    'exp_state': State.STOP
+    'exp_n':10
+    'exp_max_iter':1000
+    'exp_current':0
+'''
+def iterate():
+    
+    logger = context['logger']
+    planner = context['planner']
+    #if there is a running experiment the iteration is controlled by it
+    if context['exp_state']==State.PLAY:
+        logger = context['experiments'].get_logger()
+        if planner.iterations >= context['exp_max_iter']:
+            context['state'] = State.STOP
+            context['exp_current']=context['exp_current']+1
+            ##new experiment if exp_current < exp_n
+            if context['exp_current'] < context['exp_n'] :
+                play()
+                context['experiments'].start_experiment(context['exp_current'])
+                logger = context['experiments'].get_logger()
+            else: ##otherwise manage the end of the experiment
+                end_experiments()
+                return
+    #normal execution
+    if context['planner'].iterate(10, logger):pause()
+       
+
 if __name__ == '__main__':
  
     pygame.init()

@@ -1,6 +1,6 @@
 import pygame
 from RRTbase import *
-from maps  import *
+from Maps  import *
 
 
 
@@ -235,6 +235,11 @@ class RRTstar(SQ_Planner):
                 print("lenght {0} at iter{1}: ".format(tree.node_cost[goal], self.iterations))
             else:
                 print("Iteration: ", self.iterations)
+            if logger:
+                if goal in tree.tree:
+                    c_best = tree.node_cost[goal]
+                    logger.add_sample(self.iterations,c_best,c_best/self.c_min)
+                else:logger.add_sample(self.iterations,0,0)
         return False
     
 def rrt_star(map, init, goal):
@@ -287,10 +292,7 @@ def rrt_star(map, init, goal):
         else:
             print("Iteration: ", iterations) 
             
-        if logger:
-            c_best = tree.node_cost[goal]
-            if goal in tree.tree:logger.add_sample(iterations,c_best,c_best/self.c_min)
-            else:logger.add_sample(self.iterations,0,0)
+
 ###############Informed RRT STAR######################################
 from math import cos, sin , atan2, degrees
 import random

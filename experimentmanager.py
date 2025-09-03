@@ -57,9 +57,10 @@ class ExperimentManager:
             v=logger.lenght
             i=0       
             while i < len(v) and v[i] == 0 : i += 1
-            t=[0]+v[i:]
+            t=v[i:]
             if not t: continue
-            else: recortados.append(t)
+            t=[0]+t
+            recortados.append(t)
         max_len = max(len(t) for t in recortados) if recortados else  0 
         salida = []
         for t in recortados:

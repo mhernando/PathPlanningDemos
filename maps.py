@@ -29,6 +29,71 @@ map5=((500,0, pared, 80),
         (200,100,600,pared),
         (500,100,pared,300),
         (200,400,600,pared))
+map6 = (
+         (0,0,1000,10),    # Borde superior
+         (0,0,10,600),     # Borde izquierda
+         (990,0,10,600),   # Borde derecha
+         (0,590,1000,10),  # Borde inferior
+         (0,95,75,10),     # Habitacion 1
+         (135,95,65,10),  # Habitacion 1
+         (200,95,10,155),  # Habitacion 1
+         (0,245,200,10),   # Habitacion 1/2
+         (200,250,10,155), # Habitacion 2
+         (0,395,75,10),   # Habitacion 2
+         (135,395,65,10),  # Habitacion 2
+         (0,495,185,10),   # Habitacion 3
+         (245,495,10,105), # Habitacion 3/4
+         (255,495,180,10), # Habitacion 4
+         (495,495,10,105), # Habitacion 4/5
+         (565,495,180,10), # Habitacion 5
+         (745,495,10,105), # Habitacion 5/6
+         (815,495,185,10), # Habitacion 6
+         (800,395,200,10), # Habitacion 7
+         (800,245,10,90), # Habitacion 7
+         (800,245,200,10), # Habitacion 7/8
+         (800,165,10,90), # Habitacion 8
+         (800,95,200,10),  # Habitacion 8
+         (300,125,170,30), # Centro arriba izquierda
+         (300,125,30,100), # Centro arriba izquierda
+         (530,125,170,30), # Centro arriba derecha
+         (670,125,30,100), # Centro arriba derecha
+         (300,354,170,30), # Centro abajo izquierda
+         (300,284,30,100), # Centro abajo izquierda
+         (530,354,170,30), # Centro abajo derecha
+         (670,284,30,100), # Centro abajo derecha
+)
+# MAPA PLANTA 2
+map7 = (
+         (0,0,1000,10),    # Borde superior
+         (0,0,10,600),     # Borde izquierda
+         (990,0,10,600),   # Borde derecha
+         (0,590,1000,10),  # Borde inferior
+         (0,240,150,10),
+         (0,350,45,10),
+         (105,350,45,10),
+         (140,240,10,120),
+         (245,355,10,245),
+         (245,0,10,160),
+         (245,220,10,80),
+         (245,150,100,10),
+         (245,290,100,10),
+         (340,90,10,210),
+         (340,90,60,10),
+         (390,0,10,40),
+         (390,90,10,200),
+         (460,280,10,100),
+         (460,280,270,10),
+         (720,0,10,30),
+         (720,90,10,290),
+         (460,370,55,10),
+         (565,370,425,10),
+         (720,180,155,10),
+         (935,180,65,10),
+
+         (545,430,120,10),
+         (545,430,10,170),
+         (655,490,10,110),
+)
 class MapData:
     def __init__(self, map, description, init = def_init, goal = def_goal):
         self.map = map
@@ -40,7 +105,9 @@ maps=(MapData(map1,"Mapa 'J' Map"),
       MapData(map2,"Easy Map"),
       MapData(map3,"Imposible Map"),
       MapData(map4,"T Map"),
-      MapData(map5,"Mapa NIRT",(200,200),(800,200))
+      MapData(map5,"Mapa NIRT",(200,200),(800,200)),
+      MapData(map6, "Plano 1", (50, 200), (950, 550)),
+      MapData(map7, "Plano 2", (30, 570), (790, 340))
       )
 
 def p2distance(p1,p2):

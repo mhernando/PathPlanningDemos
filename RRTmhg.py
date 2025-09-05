@@ -97,7 +97,7 @@ class n_informedRRTstar(SQ_Planner):
             alpha, vol = self.sample()
             if vol < 0 :
                 print("VOL <0", vol)
-            if not self.iterations%100: alpha = goal 
+            if not self.iterations%goal_trial: alpha = goal 
             qn, edge = tree.nearest_to_swath(alpha)
             qs = map.stopping_configuration(qn, alpha)
             if qs != qn:

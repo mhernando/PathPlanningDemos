@@ -37,7 +37,7 @@ class RRT(SQ_Planner):
         for i in range(max_iter):
             self.iterations+=1
             alpha = map.random_sample()
-            if not self.iterations%100: alpha = goal 
+            if not self.iterations%goal_trial: alpha = goal 
             qn, edge = tree.nearest_to_swath(alpha)
             qs = map.stopping_configuration(qn, alpha)
             if qs != qn:
@@ -57,7 +57,7 @@ def rrt_simple(map, init, goal):
     iterations = 1
     while(pygame_events()):
         alpha = map.random_sample()
-        if not iterations%100: alpha = goal 
+        if not iterations%goal_trial: alpha = goal 
         qn, edge = tree.nearest_to_swath(alpha)
         qs = map.stopping_configuration(qn, alpha)
         if qs != qn:
@@ -148,7 +148,7 @@ class RRTdubbins(SQ_Planner):
         for i in range(max_iter):
             self.iterations+=1
             alpha = map.random_sample()
-            if not self.iterations%100: alpha = goal 
+            if not self.iterations%goal_trial: alpha = goal 
             qn, edge = tree.nearest_to_swath(alpha)
             qs, tray = tree.steer(qn, alpha, map)
             if qs != qn:
@@ -167,7 +167,7 @@ def rrt_dubbins(map, init, goal):
     iterations = 1
     while(pygame_events()):
         alpha = map.random_sample()
-        if not iterations%100: alpha = goal 
+        if not iterations%goal_trial: alpha = goal 
         qn, edge = tree.nearest_to_swath(alpha)
         qs, tray = tree.steer(qn, alpha, map)
         if qs != qn:
@@ -199,7 +199,7 @@ class RRTstar(SQ_Planner):
         for i in range(max_iter):
             self.iterations+=1
             alpha = map.random_sample()
-            if not self.iterations%100: alpha = goal 
+            if not self.iterations%goal_trial: alpha = goal 
             qn, edge = tree.nearest_to_swath(alpha)
             qs = map.stopping_configuration(qn, alpha)
             if qs != qn:
@@ -253,7 +253,7 @@ def rrt_star(map, init, goal):
         if not event: break
         if event == pygame.KEYDOWN: return True
         alpha = map.random_sample()
-        if not iterations%100: alpha = goal 
+        if not iterations%goal_trial: alpha = goal 
         qn, edge = tree.nearest_to_swath(alpha)
         qs = map.stopping_configuration(qn, alpha)
         if qs != qn:
@@ -354,7 +354,7 @@ class informedRRTstar(SQ_Planner):
         for i in range(max_iter):
             self.iterations+=1
             alpha = self.sample(self.c_best)
-            if not self.iterations%100: alpha = goal 
+            if not self.iterations%goal_trial: alpha = goal 
             qn, edge = tree.nearest_to_swath(alpha)
             qs = map.stopping_configuration(qn, alpha)
             if qs != qn:

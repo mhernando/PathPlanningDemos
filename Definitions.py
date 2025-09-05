@@ -20,6 +20,8 @@ path_thickness = 2
 edge_color = blue
 node_color = blue
 
+#rrt basic
+goal_trial = 50 #number of samples between goal trials
 #dubbins
 dubbins_advance_step = 3 #pixels
 dubbins_rotation_step = 8 #degs

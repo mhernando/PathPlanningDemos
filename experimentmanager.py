@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 from logger import * 
 class ExperimentManager:
     def __init__(self):
-        self.experiments = {}
-        self.current_exp_id = None
+        self.reset()
 
     def start_experiment(self, exp_id):
         self.current_exp_id = exp_id
@@ -15,6 +14,7 @@ class ExperimentManager:
         """Elimina todos los experimentos y reinicia el estado."""
         self.experiments = {}
         self.current_exp_id = None
+        self.normalized_data = None
 
     def pause(self):
         """Pausa el experimento actual."""
@@ -34,24 +34,39 @@ class ExperimentManager:
         if self.current_exp_id is None:
             raise ValueError("No experiment started. Use start_experiment(exp_id) first.")
         self.experiments[self.current_exp_id].add_sample(iteration, lenght, cost)
-
+    def get_experiments_time(self):
+        time = 0
+        for exp_id, logger in self.experiments.items():
+            time+=logger.time[-1]
+        return time
     def save_all(self, file_name):
         lenght_data = {}
         cost_data = {}
+        time_data = {}
 
         for exp_id, logger in self.experiments.items():
             lenght_data[f'Exp_{exp_id}'] = logger.lenght
             cost_data[f'Exp_{exp_id}'] = logger.cost
+            time_data[f'Exp_{exp_id}'] = logger.time
 
         df_lenght = pd.DataFrame(dict(lenght_data))
         df_cost = pd.DataFrame(dict(cost_data))
+        df_time = pd.DataFrame(dict(time_data))
+        data=self.normaliza_datos()
+      
+        df_data = pd.DataFrame(list(zip(*data)))
+        df_data.columns = [f'Exp {i+1}' for i in range(len(data))]
 
         with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
             df_lenght.to_excel(writer, sheet_name='Lenght', index=False)
             df_cost.to_excel(writer, sheet_name='Cost', index=False)
+            df_time.to_excel(writer, sheet_name='Time', index=False)
+            df_data.to_excel(writer, sheet_name='L_Normalized', index=False)
+            
 
     def normaliza_datos(self):
         #elimina los ceros iniciales y rellena al final y lo retorna todo como una matriz
+        if self.normalized_data: return self.normalized_data
         recortados=[]
         for exp_id, logger in self.experiments.items():
             v=logger.lenght
@@ -66,6 +81,7 @@ class ExperimentManager:
         for t in recortados:
             fill = t[-1]
             salida.append(t + [fill] * (max_len - len(t)))
+        self.normalized_data =  salida
         return salida
 
     def plot_normalizado(self):

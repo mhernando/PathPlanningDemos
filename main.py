@@ -136,8 +136,20 @@ def iniciar_experimento(num_muestras, num_experimentos):
     
 def end_experiments():
     context['exp_state'] = State.STOP
-    #context['experiments'].save_all('prueba.xlsx')
+    total_time = context['experiments'].get_experiments_time()
+    num=context['exp_current'] 
+    print(f"TOTAL TIME: {total_time} NUM EXP:{num} TIME_PER_EXP:{total_time/num}")
+     
     context['experiments'].plot_normalizado()
+    file_name = filedialog.asksaveasfilename(
+        defaultextension=".xlsx",
+        filetypes=[("Excel files", "*.xlsx")],
+        title="Save planning data as ..."
+    ) 
+    if file_name:
+        context['experiments'].save_all(file_name)
+    else:
+        messagebox.showwarning("Cancelado", "No se seleccionó ningún archivo.")
     #context['experiments'].plot_all()
     print("EXPERIMENT END")
     stop()

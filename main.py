@@ -25,7 +25,8 @@ context = {
     'exp_state': State.STOP,
     'exp_n':10,
     'exp_max_iter':1000,
-    'exp_current':0
+    'exp_current':0,
+    'exp_optimal':None 
     }
 planners = [("(1) Simple RRT", 0, RRT),
             ("(2) RRT-Connect", 1, RRTconnect),
@@ -96,13 +97,19 @@ def experiments():
     tk.Label(dialog, text="Número de experimentos:").grid(row=1, column=0, padx=10, pady=5)
     entry_experimentos = tk.Entry(dialog)
     entry_experimentos.grid(row=1, column=1, padx=10, pady=5)
+    
+    tk.Label(dialog, text="Optimo:").grid(row=2, column=0, padx=10, pady=5)
+    entry_optimo = tk.Entry(dialog)
+    entry_optimo.grid(row=2, column=1, padx=10, pady=5)
 
     entry_muestras.insert(0, str(context['exp_max_iter']))
     entry_experimentos.insert(0, str(context['exp_n']))
+    entry_optimo.insert(0, str(context['exp_optimal']))
     def on_ok():
         try:
             num_muestras = int(entry_muestras.get())
             num_experimentos = int(entry_experimentos.get())
+            context['exp_optimal'] = float(entry_optimo.get())
             dialog.destroy()
             iniciar_experimento(num_muestras, num_experimentos)
         except ValueError:
@@ -111,8 +118,8 @@ def experiments():
     def on_cancel():
         dialog.destroy()
 
-    tk.Button(dialog, text="OK", command=on_ok).grid(row=2, column=0, padx=10, pady=10)
-    tk.Button(dialog, text="Cancel", command=on_cancel).grid(row=2, column=1, padx=10, pady=10)
+    tk.Button(dialog, text="OK", command=on_ok).grid(row=3, column=0, padx=10, pady=10)
+    tk.Button(dialog, text="Cancel", command=on_cancel).grid(row=3, column=1, padx=10, pady=10)
   
     
 def stop():
@@ -148,6 +155,7 @@ def end_experiments():
     ) 
     if file_name:
         context['experiments'].save_all(file_name)
+        context['experiments'].save_remuestreado(file_name, context['exp_optimal'])
     else:
         messagebox.showwarning("Cancelado", "No se seleccionó ningún archivo.")
     #context['experiments'].plot_all()
@@ -163,19 +171,56 @@ def set_map(i):
         init = maps[i].init
         goal = maps[i].goal
         map.loadMap(maps[i].map,[init, goal])
-    '''if nmap==3: 
-        map.loadMap(map2, [init,goal])
-    if nmap==4: 
-        map.loadMap(map3, [init,goal])
-    if nmap==5: 
-        map.loadMap(map4, [init,goal])
-    '''
+ 
     map.draw()
     map.draw_init_and_goal(init,goal)
     pygame.display.update()    
     print("Masp", map)
     update_UI_states()
+def load_map():
+    global context
+    global init, goal
+    if context['state'] != State.STOP: return
+    map=context['map']
+    if not map:return
 
+    file_name = filedialog.askopenfilename(
+        defaultextension=".map",
+        filetypes=[("Map files", "*.map")],
+        title="Cargar mapa desde archivo..."
+    )
+
+    if file_name:
+        try:
+            init, goal = map.load_map_from_file(file_name)
+            map.draw()
+            map.draw_init_and_goal(init,goal)
+            pygame.display.update()   
+            messagebox.showinfo("Mapa cargado", f"Mapa cargado correctamente desde:\n{file_name}")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo cargar el mapa:\n{str(e)}")
+    else:
+        messagebox.showwarning("Cancelado", "No se seleccionó ningún archivo.")
+
+def save_map():
+    global context
+    global init, goal
+    if context['state'] != State.STOP: return
+    map=context['map']
+    if not map: return
+    file_name = filedialog.asksaveasfilename(
+        defaultextension=".map",
+        filetypes=[("map files", "*.map")],
+        title="Save map data as ..."
+    ) 
+    if file_name:
+        map.save_map_to_file(file_name,init,goal)
+    else:
+        messagebox.showwarning("Cancelado", "No se seleccionó ningún archivo.")
+    
+    
+    
+    
 def update_UI_states():
     global context
     state = context['state']
@@ -259,7 +304,12 @@ def init_gui_window():
 
     frame_map.pack(padx=5, pady=5)
     ######################################################################
-    update_UI_states()
+    context['save_map']=bsave_map=tk.Button(root, text="SAVE MAP", command=save_map)
+    bsave_map.pack(padx=10,fill=tk.X)
+    context['load_map']=bload_map=tk.Button(root, text="LOAD MAP", command=load_map)
+    bload_map.pack(padx=10,fill=tk.X)
+    
+    update_UI_states()  
     root.bind('<KeyPress>',key_press)
     #root.update()
     #root.mainloop()
@@ -276,8 +326,10 @@ def process_pygame_events():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1: #left
                     init = pygame.mouse.get_pos()
+                    print('INIT:', init)
                 if event.button == 3: #right
                     goal = pygame.mouse.get_pos()
+                    print('GOAL:', goal)
                 context['map'].draw()
                 context['map'].draw_init_and_goal(init, goal)
                 pygame.display.update()

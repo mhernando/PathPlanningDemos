@@ -3,6 +3,7 @@
 import random
 import math
 import pygame
+import json
 from Definitions import *
 
 def_init = (50,100)
@@ -25,7 +26,7 @@ map4=((250,200,400,20),
     (300,200,20,300),
     (250,500,300,20))
 pared = 10
-map5=((500,0, pared, 80),
+map5=((500,0, pared, 60),
         (200,100,600,pared),
         (500,100,pared,300),
         (200,400,600,pared))
@@ -133,6 +134,7 @@ def distance_point_to_segment(p,s1,s2):
 def optimal_radius(n, map_size = 1000, gamma = 0.7):
     return gamma*map_size*(math.log(n+1)/(n+1))**0.5
 
+
 class BaseMap:
     ''' BaseMap: includes the possibility of drawing it, and the creation of obstacles. 
     It has the methods for collision checking and includes de random generation of C samples'''
@@ -164,6 +166,26 @@ class BaseMap:
         self._obs=[]
         for r in rects: self._obs.append(pygame.Rect(*r))
         for p in points: self.removeObsPoint(p)
+
+    def save_map_to_file(self, filename, init, goal):
+        """Guarda el mapa en un archivo JSON incluyendo obstáculos, punto inicial y final."""
+        data = {
+            "obstacles": [list(rect) for rect in self._obs],  # convertir pygame.Rect a lista
+            "init": list(init),
+            "goal": list(goal)
+        }
+        with open(filename, 'w') as f:
+            json.dump(data, f, indent=4)
+
+    def load_map_from_file(self, filename):
+        """Carga el mapa desde un archivo JSON, incluyendo obstáculos, punto inicial y final."""
+        with open(filename, 'r') as f:
+            data = json.load(f)
+        rects = [tuple(r) for r in data.get("obstacles", [])]
+        self.loadMap(rects)
+        init = tuple(data.get("init", ()))
+        goal = tuple(data.get("goal", ()))
+        return init, goal
 
     def removeObsPoint(self, point):
         '''removes all the obstacles  that enclose the point'''

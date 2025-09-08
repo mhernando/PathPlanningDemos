@@ -17,12 +17,13 @@ class TreeBase:
         self.tree = {} #dict where each node stores his parent
 
     def draw(self, canvas):
-        pygame.draw.circle(canvas, red, self.root[:2], 3*node_rad, 3*node_rad)
-        if self.goal: pygame.draw.circle(canvas, green, self.goal[:2], 3*node_rad, 3*node_rad)
+
         for p2 in self.tree:
             self.draw_edge(canvas,p2)
         if self.goal in self.tree:
             self.draw_path(canvas, self.goal)
+        pygame.draw.circle(canvas, red, self.root[:2], end_node_rad, end_node_rad)
+        if self.goal: pygame.draw.circle(canvas, green, self.goal[:2], end_node_rad, end_node_rad)
 
     def draw_edge(self, canvas, p2):
         if not p2 in self.tree: return
@@ -34,7 +35,10 @@ class TreeBase:
         while(p2 in self.tree):
             pygame.draw.line(canvas, red, self.tree[p2][:2] ,p2[:2], path_thickness)
             p2 = self.tree[p2]
+        pygame.draw.circle(canvas, red, self.root[:2], end_node_rad, end_node_rad)
+        if self.goal: pygame.draw.circle(canvas, green, self.goal[:2], end_node_rad, end_node_rad)
         pygame.display.update()
+        
     
     def get_path(self, node):
         path=deque()

@@ -15,8 +15,9 @@ edge_discretization_step = 10
 
 #graphics
 node_rad = 2
+end_node_rad = 10
 edge_thickness = 1
-path_thickness = 2
+path_thickness = 5
 edge_color = blue
 node_color = blue
 

@@ -71,7 +71,7 @@ class n_informedRRTstar(SQ_Planner):
             q_rand = (el.q_center[0]+r1*q_ball[0]*R[0][0]+r2*q_ball[1]*R[0][1],
                      el.q_center[1]+r1*q_ball[0]*R[1][0]+r2*q_ball[1]*R[1][1])
             if (0 < q_rand[0] < map._width) and (0 < q_rand[1] < map._heigh):
-                vol=r1*r2/self.vol
+                vol=3.1415*r1*r2/self.vol
                 if vol>1: vol =1
                 return q_rand, vol
         

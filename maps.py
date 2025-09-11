@@ -197,8 +197,8 @@ class BaseMap:
             pygame.draw.rect(self.canvas,grey, ob)
 
     def draw_init_and_goal(self, init, goal):
-        pygame.draw.circle(self.canvas, red, init, 3*node_rad, 3*node_rad)
-        if goal: pygame.draw.circle(self.canvas, green, goal, 3*node_rad, 3*node_rad)
+        pygame.draw.circle(self.canvas, red, init, end_node_rad, end_node_rad)
+        if goal: pygame.draw.circle(self.canvas, green, goal, end_node_rad, end_node_rad)
 
     def checkPoint(self, point):
         if point[0]<0 or point[0]>self._width or point[1]<0 or point[1]>self._heigh: return False

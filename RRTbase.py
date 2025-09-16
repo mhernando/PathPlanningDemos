@@ -37,7 +37,7 @@ class TreeBase:
             p2 = self.tree[p2]
         pygame.draw.circle(canvas, red, self.root[:2], end_node_rad, end_node_rad)
         if self.goal: pygame.draw.circle(canvas, green, self.goal[:2], end_node_rad, end_node_rad)
-        pygame.display.update()
+        #pygame.display.update()
         
     
     def get_path(self, node):

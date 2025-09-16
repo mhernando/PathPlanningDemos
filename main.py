@@ -292,6 +292,16 @@ def init_gui_window():
     bstop.pack(side=tk.RIGHT)
     control_frame.pack(padx=5, pady=5)
     
+    context['output'] = estado = tk.StringVar()
+    estado.set("...")
+    label_out = tk.Label(
+        root, textvariable=estado,
+        font=("Arial", 8), fg="blue",
+        bd =1,
+        relief="sunken",  anchor="w", justify="left",  wraplength=300
+)
+    label_out.pack(fill="x", padx=10, pady=10, ipady=10)
+
     context['save']=bsave=tk.Button(root, text="SAVE", command=save)
     bsave.pack(padx=10,fill=tk.X)
     context['b_experiments']=bsave=tk.Button(root, text="EXPERIMENTS", command=experiments)
@@ -340,9 +350,29 @@ def control_loop():
         process_pygame_events()
         state = context['state']
         if state == State.PLAY:
+            txt=output_txt()
             pygame.display.update()
             iterate()
+            
+def output_txt():
+    exp_state=context['exp_state']
+    state = context['state']
+    logger = context['logger']
+    txt = ""
+    if exp_state in (State.PLAY, State.PAUSE):
+        logger = context['experiments'].get_logger()
+        txt = f"EXP:{context['exp_current']}/{context['exp_n']} Max-N:{context['exp_max_iter']} Opt:{context['exp_optimal']} \n"
+    i,t,l=logger.get_last_sample()
+    txt2 = f"N:{i} T:{t:.2f}s. L:{l:.2f}"
+    txt = txt + txt2
+    context['output'].set(txt)
+    context['map'].show_text(txt2)
+    
 
+
+    return txt
+        
+    
 #main function responsible of iterations.
 '''
     'experiments': ExperimentManager(),
@@ -370,7 +400,9 @@ def iterate():
                 end_experiments()
                 return
     #normal execution
-    if context['planner'].iterate(10, logger):pause()
+    if context['planner'].iterate(10, logger):
+        stop()
+        pygame.display.update()
        
 
 if __name__ == '__main__':

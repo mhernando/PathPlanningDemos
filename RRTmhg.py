@@ -59,7 +59,7 @@ class n_informedRRTstar(SQ_Planner):
             el, c_max, q1, q2 = el0, c_total, init, goal
         
         if c_max-el.c_min <=0 :
-            print(f"degenero: c_max={c_max} c_min={el.c_min} {q1} - {q2} ")
+            #print(f"degenero: c_max={c_max} c_min={el.c_min} {q1} - {q2} ")
             el, c_max, q1, q2 = el0, c_total, init, goal
             
         
@@ -131,7 +131,7 @@ class n_informedRRTstar(SQ_Planner):
                 #self.draw_ellipsoid(map.canvas)
                 tree.draw_path(map.canvas,goal)
                 self.c_best = tree.node_cost[goal]
-                print("SUCCESS with lenght {0} at iter{1}: ".format(self.c_best, self.iterations))
+                #print("SUCCESS with lenght {0} at iter{1}: ".format(self.c_best, self.iterations))
                 #return True
             #repainting managing
             if(repaint):
@@ -147,9 +147,11 @@ class n_informedRRTstar(SQ_Planner):
                 else:logger.add_sample(self.iterations,0,0)
                 
             if self.c_best:
-                print("Iteration2: {0} Length:{1:.9}/{2:.9}".format(self.iterations,self.c_best, self.c_min))
+                pass
+                #print("Iteration2: {0} Length:{1:.9}/{2:.9}".format(self.iterations,self.c_best, self.c_min))
             else:
-                print("Iteration2: ", self.iterations)
+                pass
+                #print("Iteration2: ", self.iterations)
         
         return False
 

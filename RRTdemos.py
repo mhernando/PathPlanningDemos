@@ -47,7 +47,9 @@ class RRT(SQ_Planner):
                 print("SUCCESS at iteration: ", self.iterations)
                 return True
             #console iteration info
-            print("Iteration: ", self.iterations)
+            if logger:
+                logger.add_sample(self.iterations,0,0)
+            #print("Iteration: ", self.iterations)
         return False
 
 def rrt_simple(map, init, goal):
@@ -102,7 +104,9 @@ class RRTconnect(SQ_Planner):
             if len(tree_a.tree) > len(tree_b.tree) : 
                 self.tree_a, self.tree_b = self.tree_b, self.tree_a
                 tree_a, tree_b = self.tree_a, self.tree_b
-            print("Iteration: ", self.iterations)
+            if logger:
+                logger.add_sample(self.iterations,0,0)
+            #print("Iteration: ", self.iterations)
         return False   
 def rrt_connect(map, init, goal):
     '''RRT CONNECT: bidirectional search'''
@@ -157,7 +161,9 @@ class RRTdubbins(SQ_Planner):
                 tree.draw_path(map.canvas,qs)
                 print("SUCCESS at iteration: ", self.iterations)
                 return True
-            print("Iteration: ", self.iterations)
+            if logger:
+                logger.add_sample(self.iterations,0,0)
+            #print("Iteration: ", self.iterations)
         return False
     
 def rrt_dubbins(map, init, goal):
@@ -222,7 +228,7 @@ class RRTstar(SQ_Planner):
                         repaint = True
             if qs == goal:
                 tree.draw_path(map.canvas,goal)
-                print("SUCCESS at iteration: ", self.iterations)
+                #print("SUCCESS at iteration: ", self.iterations)
                 #return True
             #repainting managing
             if(repaint):
@@ -232,9 +238,11 @@ class RRTstar(SQ_Planner):
             #console iteration info
             #print("Iteration: ", self.iterations)
             if goal in tree.tree:
-                print("lenght {0} at iter{1}: ".format(tree.node_cost[goal], self.iterations))
+                pass
+                #print("lenght {0} at iter{1}: ".format(tree.node_cost[goal], self.iterations))
             else:
-                print("Iteration: ", self.iterations)
+                pass
+                #print("Iteration: ", self.iterations)
             if logger:
                 if goal in tree.tree:
                     c_best = tree.node_cost[goal]
@@ -397,10 +405,11 @@ class informedRRTstar(SQ_Planner):
                 else:logger.add_sample(self.iterations,0,0)  
             #console iteration info
             if self.c_best:
-                print("Iteration: {0} Length:{1:.9}/{2:.9}".format(self.iterations,
-                                    self.c_best, self.c_min))
+                pass
+                #print("Iteration: {0} Length:{1:.9}/{2:.9}".format(self.iterations,                                    self.c_best, self.c_min))
             else:
-                print("Iteration: ", self.iterations)
+                pass
+                #print("Iteration: ", self.iterations)
         
         return False
     

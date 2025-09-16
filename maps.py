@@ -107,7 +107,7 @@ maps=(MapData(map1,"Mapa 'J' Map"),
       MapData(map3,"Imposible Map"),
       MapData(map4,"T Map"),
       MapData(map5,"Mapa NIRT",(200,200),(800,200)),
-      MapData(map6, "Plano 1", (50, 200), (950, 550)),
+      MapData(map6, "Plano 1", (106, 170), (868, 548)),
       MapData(map7, "Plano 2", (30, 570), (790, 340))
       )
 
@@ -148,6 +148,7 @@ class BaseMap:
         self._obs=[]
         self._min_obs_size = min_obs_size
         self._obs_variance = obs_variance
+        self._font=pygame.font.SysFont("Arial", 24)
   
     def makeRandomRect(self):
         w= int(random.uniform(self._min_obs_size,self._obs_variance))
@@ -191,6 +192,16 @@ class BaseMap:
         '''removes all the obstacles  that enclose the point'''
         self._obs=[obs for obs in self._obs if not obs.collidepoint(point)]
 
+    def show_text(self, text):       
+        text_surface = self._font.render(text, True, (255, 255, 255))
+        text_rect = text_surface.get_rect()
+        text_bkg = pygame.Rect(self._width-300,10,290,30)
+        
+        text_rect.right = text_bkg.right - 10
+        text_rect.top = text_bkg.top + (text_bkg.height - text_rect.height) // 2
+        self.canvas.fill((30, 30, 80), text_bkg)
+        self.canvas.blit(text_surface, text_rect)
+        
     def draw(self):
         self.canvas.fill(white)
         for ob in self._obs:

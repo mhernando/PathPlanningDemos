@@ -5,14 +5,17 @@ class DataLogger:
     def __init__(self):
         self.reset()
 
-    def add_sample(self, iteration, lenght, cost, n_exp=0):
+    def add_sample(self, iteration, lenght, cost , n_exp=0):
         _time = self.get_elapsed_time()
         self.time.append(_time)
         self.iteration.append(iteration)
         self.lenght.append(lenght)
         self.cost.append(cost)
         #print("Logger: ", iteration)
-
+    def get_last_sample(self):
+        if not self.iteration :
+            return (0,0,0)
+        return (self.iteration[-1], self.time[-1], self.lenght[-1])
     def pause(self):
         if self._pause_start is None:
             self._pause_start = time.time()

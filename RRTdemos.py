@@ -157,7 +157,7 @@ class RRTdubbins(SQ_Planner):
             qs, tray = tree.steer(qn, alpha, map)
             if qs != qn:
                 tree.add_edge(qn, qs, tray, map.canvas)
-            if p2distance(qs, dubbins_goal)<dubbins_end_distance:
+            if p2distance(qs, goal)<dubbins_end_distance:
                 tree.draw_path(map.canvas,qs)
                 print("SUCCESS at iteration: ", self.iterations)
                 return True

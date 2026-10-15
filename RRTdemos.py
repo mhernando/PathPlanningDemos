@@ -215,7 +215,7 @@ class RRTstar(SQ_Planner):
                 else: cmin= dmin+tree.node_cost[qn]
                 #first strategy
                 for qi in Q_near:
-                    if qi[3]<cmin and map.checkSegment(qi[0],qs):
+                    if qi[3]+p2distance(qs,qi[0]) < cmin and map.checkSegment(qi[0],qs):
                         tree.add_edge(qi[0],qs,None,map.canvas)
                         Q_near.remove(qi)
                         break
@@ -269,9 +269,9 @@ def rrt_star(map, init, goal):
             dmin= p2distance(qs,qn)
             if edge: cmin = dmin+tree.node_cost[tree.tree[edge]]+p2distance(tree.tree[edge],qn)
             else: cmin= dmin+tree.node_cost[qn]
-            #first strategy
+            #first strategy qi=(node, distance to qs, cost, cost + distance)
             for qi in Q_near:
-                if qi[3]<cmin and map.checkSegment(qi[0],qs):
+                if qi[3]+p2distance(qs,qi[0]) <cmin and map.checkSegment(qi[0],qs):
                     tree.add_edge(qi[0],qs,None,map.canvas)
                     Q_near.remove(qi)
                     break
@@ -285,7 +285,7 @@ def rrt_star(map, init, goal):
         if qs == goal:
             tree.draw_path(map.canvas,goal)
             print("SUCCESS with lenght {0} at iter{1}: ".format(
-                tree.node_cost[goal], self.iterations))
+                tree.node_cost[goal], iterations))
             #return True
         #repainting managing
         if(repaint):

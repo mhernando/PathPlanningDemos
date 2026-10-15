@@ -109,7 +109,12 @@ class TreeDiscretized(TreeBase):
         return qn, None
 def dubbins_action(p,action):
     angle = math.radians(p[2]+action[1]*dubbins_rotation_step)
-    return p[0]+dubbins_advance_step*math.cos(angle), p[1]+dubbins_advance_step*math.sin(angle), (360+math.degrees(angle))%360
+    advance = action[0] * dubbins_advance_step
+    return (
+        p[0]+advance*math.cos(angle),
+        p[1]+advance*math.sin(angle),
+        (360+math.degrees(angle))%360
+        )
 
 class TreeDubbins(TreeDiscretized):
     def __init__(self, root, goal = None , color = edge_color):
@@ -171,8 +176,14 @@ class TreeStar(TreeBase):
         if not p in self.tree: return
         self.edge_cost[p] = p2distance(self.tree[p],p)
         self.node_cost[p] = self.edge_cost[p]+self.node_cost[self.tree[p]]
-
-    def add_edge(self, p1,p2,p3=None, canvas = None): 
+    def add_edge(self, p1, p2, p3=None, canvas=None):
+        inserted = super().add_edge(p1, p2, p3, canvas)
+        if not inserted: return False
+        if p3 is not None: self.compute_cost(p1)
+        self.compute_cost(p2)
+        if p3 is not None: self.compute_cost(p3)
+        return True
+    def add_edge_old(self, p1,p2,p3=None, canvas = None): 
         ret=super().add_edge(p1,p2,p3,canvas)
         if p3: self.compute_cost(p1)
         self.compute_cost(p2)
@@ -193,10 +204,12 @@ class TreeStar(TreeBase):
         '''retrieves a list of tuples with the (node, distance to p, cost, cost + distance) at a distance to p less than r
         to speed up the algorithm the list is sorted by the minimun cost+distance'''
         nodes = []
-        for n in self.tree:
+        for n in self.node_cost: #copilot correction
+        #for n in self.tree:
             d = p2distance(p,n)
-            if d<r: nodes.append((n,d,self.node_cost[n], d+self.node_cost[n]))
-        nodes.sort(key=lambda x:x[3])
+            if d<=r:
+                nodes.append((n,d,self.node_cost[n], self.node_cost[n] +d))
+        nodes.sort(key=lambda item:item[3])
         return nodes
 
     def change_parent(self, p, new_parent):

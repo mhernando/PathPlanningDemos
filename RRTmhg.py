@@ -23,7 +23,14 @@ class n_informedRRTstar(SQ_Planner):
         self.c_min=el.c_min
         self.vol = map._width*map._heigh
         self.n_nodes=1 #number of normalized tree nodes
+        
     def get_ellip(self, q1, q2):
+        q1_ellipses = self.ellipses.setdefault(q1, {})
+        if q2 not in q1_ellipses:
+            q1_ellipses[q2] = ellip(q1, q2)
+        return q1_ellipses[q2]
+    
+    def get_ellip_old(self, q1, q2):
         if q1 in self.ellipses :
             if q2 in self.ellipses[q1]:
                 return self.ellipses[q1][q2]
@@ -65,7 +72,9 @@ class n_informedRRTstar(SQ_Planner):
         
         R = el.Rot
         r1=0.5*c_max
-        r2=0.5*(c_max**2-el.c_min**2)**0.5
+        delta = max(0.0, c_max * c_max - self.c_min * self.c_min)
+        r2 = 0.5 * math.sqrt(delta)
+        #r2=0.5*(c_max**2-el.c_min**2)**0.5
         while True:
             q_ball = uniform_random_circle_point()
             q_rand = (el.q_center[0]+r1*q_ball[0]*R[0][0]+r2*q_ball[1]*R[0][1],
@@ -127,6 +136,8 @@ class n_informedRRTstar(SQ_Planner):
                     if cmin+qi[1]<qi[2] and map.checkSegment(qi[0],qs):
                         tree.change_parent(qi[0],qs)
                         repaint = True
+                if goal in tree.node_cost: #actualizar en cada iteracion
+                    self.c_best = tree.node_cost[goal] 
             if qs == goal:
                 #self.draw_ellipsoid(map.canvas)
                 tree.draw_path(map.canvas,goal)

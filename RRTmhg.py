@@ -1,6 +1,6 @@
 import pygame
 from RRTbase import *
-from Maps  import *
+from maps  import *
 from RRTdemos import *
 class ellip():
     def __init__(self, q1, q2):

@@ -58,6 +58,8 @@ context = {
 
     "last_ui_update": 0.0,
     "after_id": None,
+    # NIRRT*: usar el contador normalizado de nodos (n_eff)
+    "use_normalized_count": True,
 }
 
 
@@ -107,6 +109,11 @@ def create_selected_planner():
         init,
         goal,
     )
+    context["use_normalized_count"] = context["sel_norm_count"].get()
+    if isinstance(context["planner"], n_informedRRTstar):
+        context["planner"].use_normalized_count = (
+            context["use_normalized_count"]
+        )
 
     map_.draw()
     map_.draw_init_and_goal(
@@ -918,7 +925,31 @@ def init_gui_window():
         pady=5,
         fill=tk.X,
     )
-
+    
+    # -----------------------------------------------------------------
+    # Special options
+    # -----------------------------------------------------------------
+    specialoptions_frame = tk.Frame(
+        root,
+        borderwidth=2,
+        relief=tk.GROOVE,
+        )
+    context["sel_norm_count"] = norm_count_variable = (
+        tk.BooleanVar(value=context["use_normalized_count"])
+    )
+    tk.Checkbutton(
+        specialoptions_frame,
+        text="Normalized node count (NIRRT* only)",
+        padx=20,
+        variable=norm_count_variable,
+        #command=normalized_count_changed,
+    ).pack(anchor=tk.W)
+    specialoptions_frame.pack(
+        padx=5,
+        pady=5,
+        fill=tk.X,
+    )
+        
     # -----------------------------------------------------------------
     # Control frame
     # -----------------------------------------------------------------

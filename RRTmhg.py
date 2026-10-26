@@ -1,6 +1,6 @@
 import pygame
 from RRTbase import *
-from maps  import *
+from Maps  import *
 from RRTdemos import *
 class ellip():
     def __init__(self, q1, q2):
@@ -23,6 +23,7 @@ class n_informedRRTstar(SQ_Planner):
         self.c_min=el.c_min
         self.vol = map._width*map._heigh
         self.n_nodes=1 #number of normalized tree nodes
+        self.use_normalized_count = True
         
     def get_ellip(self, q1, q2):
         q1_ellipses = self.ellipses.setdefault(q1, {})
@@ -48,7 +49,7 @@ class n_informedRRTstar(SQ_Planner):
         
     def sample(self):
         #alias
-        n_factor = 0.5
+        n_factor = 0.35
         map= self.map
         costs =  self.tree.node_cost
         init = self.init
@@ -72,7 +73,7 @@ class n_informedRRTstar(SQ_Planner):
         
         R = el.Rot
         r1=0.5*c_max
-        delta = max(0.0, c_max * c_max - self.c_min * self.c_min)
+        delta = max(0.0, c_max * c_max - el.c_min * el.c_min)
         r2 = 0.5 * math.sqrt(delta)
         #r2=0.5*(c_max**2-el.c_min**2)**0.5
         while True:
@@ -109,9 +110,11 @@ class n_informedRRTstar(SQ_Planner):
             if not self.iterations%goal_trial: alpha = goal 
             qn, edge = tree.nearest_to_swath(alpha)
             qs = map.stopping_configuration(qn, alpha)
+            #for the ablation study on n count
+            if self.use_normalized_count == False:vol=1
             if qs != qn:
                 #number of nodes have to be normalized with the generation area
-                
+                #print(vol)
                 Q_near = tree.get_closests_nodes(qs,optimal_radius(self.n_nodes)) #<- (node, distance, cost, dist+cost)
                 dmin= p2distance(qs,qn)
                 if edge: cmin = dmin+tree.node_cost[tree.tree[edge]]+p2distance(tree.tree[edge],qn)

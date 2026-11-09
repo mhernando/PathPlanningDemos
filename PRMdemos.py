@@ -1,6 +1,6 @@
 import pygame
 from PRMbase import *
-from Maps  import *
+from maps  import *
 
 ''' change the following values to see how the algorithm works'''
 map_size = (1000, 600)

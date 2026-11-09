@@ -4,7 +4,7 @@ drawables trees'''
 import math
 import pygame
 from Definitions import *
-from Maps import *
+from maps import *
 
 class Node:
     def __init__(self, state, g, h, parent):
